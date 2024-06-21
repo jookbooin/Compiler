@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <map>
 
 typedef std::string TokenType;
 
@@ -20,17 +21,14 @@ namespace TokenTypes {
 	const TokenType BANG = "!";
 	const TokenType ASTERISK = "*";
 	const TokenType SLASH = "/";
-
 	const TokenType LT = "<";
 	const TokenType GT = ">";
-
 	const TokenType EQ = "==";
 	const TokenType NOT_EQ = "!=";
 
 	// Delimiters
 	const TokenType COMMA = ",";
 	const TokenType SEMICOLON = ";";
-
 	const TokenType LPAREN = "(";
 	const TokenType RPAREN = ")";
 	const TokenType LBRACE = "{";
@@ -45,6 +43,27 @@ namespace TokenTypes {
 	const TokenType ELSE = "ELSE";
 	const TokenType RETURN = "RETURN";
 
+	std::map <std::string, TokenType> keywords = {
+		{"fn",FUNCTION},
+		{"fn", FUNCTION},
+		{"let", LET},
+		{"true", TRUE},
+		{"false", FALSE},
+		{"if", IF},
+		{"else", ELSE},
+		{"return", RETURN}
+	};
+
+	// keywords 검색
+	TokenType lookupIdent(const std::string ident) {
+		auto it = TokenTypes::keywords.find(ident);
+		if (it != TokenTypes::keywords.end()) {
+			return it->second;
+		}
+
+		return TokenTypes::IDENT;
+	}
+
 }  // namespace TokenTypes
 
 class Token {
@@ -54,5 +73,6 @@ private:
 
 public:
 	Token();
+	//Token(const std::string literal);
 	Token(const TokenType type, const std::string literal);
 };
