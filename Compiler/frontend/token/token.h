@@ -10,11 +10,11 @@ namespace TokenTypes {
 	const TokenType ILLEGAL = "ILLEGAL";
 	const TokenType kEOF = "EOF";
 
-	// Identifiers + literals
+	// 식별자 (Identifiers + literals)
 	const TokenType IDENT = "IDENT";  // add, foobar, x, y, ...
 	const TokenType INT = "INT";      // 1343456
 
-	// Operators
+	// 연산자 (Operators)
 	const TokenType ASSIGN = "=";
 	const TokenType PLUS = "+";
 	const TokenType MINUS = "-";
@@ -26,7 +26,8 @@ namespace TokenTypes {
 	const TokenType EQ = "==";
 	const TokenType NOT_EQ = "!=";
 
-	// Delimiters
+
+	// 구분자 (Delimiters)
 	const TokenType COMMA = ",";
 	const TokenType SEMICOLON = ";";
 	const TokenType LPAREN = "(";
@@ -34,7 +35,7 @@ namespace TokenTypes {
 	const TokenType LBRACE = "{";
 	const TokenType RBRACE = "}";
 
-	// Keywords
+	// 예약어 (Keywords)
 	const TokenType FUNCTION = "FUNCTION";
 	const TokenType LET = "LET";
 	const TokenType TRUE = "TRUE";
