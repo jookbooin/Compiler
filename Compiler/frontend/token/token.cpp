@@ -23,6 +23,7 @@ TokenType TokenTypes::lookupIdent(const std::string ident) {
 TokenType Token::getType() const {
 	return type_;
 }
+
 std::string Token::getLiteral() const {
 	return literal_;
 }
