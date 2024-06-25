@@ -122,16 +122,18 @@ public:
 
 	TEST_METHOD(lexerMethod) {
 
-		Lexer lx(input);
+		Lexer* lx = Lexer::createLexer(input);
 		
 		for (const auto& test : tests) {
-			Token* tok = lx.nextToken();
+			Token* tok = lx->nextToken();
 
 			Assert::AreEqual(test.expectedType, tok->getType());
 			Assert::AreEqual(test.expectedLiteral, tok->getLiteral());
 
 			delete tok; // 동적으로 생성된 토큰을 해제
 		}
+		
+		delete lx;
 
 	}
 
