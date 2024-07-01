@@ -21,3 +21,25 @@ Program* Program::createProgram() {
 
 Program::~Program() {}
 
+
+// LetStatement 
+std::string LetStatement::tokenLiteral() const {
+	return "letStatement tokenLiteral()";
+}
+
+void LetStatement::statementNode() const {
+	
+}
+
+LetStatement::LetStatement(const Token* token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)),value_(nullptr) {}
+
+//LetStatement::LetStatement(const LetStatement& copy) {
+//
+//}
+
+LetStatement::~LetStatement() {
+	delete let_token_;
+	delete variable_name_;
+}
+
+
