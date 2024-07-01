@@ -60,5 +60,9 @@ public:
 	//Token(const std::string literal);
 	TokenType getType() const;
 	std::string getLiteral() const;
+
 	Token(const TokenType type, const std::string literal);
+	Token& operator=(const Token& token);
+	Token(const Token& copy);
+	~Token();
 };

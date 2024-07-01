@@ -152,15 +152,33 @@ int Lexer::getReadPosition() const {
 	return readPosition_;
 }
 
-Lexer::Lexer(const Lexer& copy) :input_(copy.input_), position_(copy.position_), readPosition_(copy.readPosition_), ch_(copy.ch_) {}
-
 Lexer::Lexer(const std::string& input)
 	: input_(input), position_(0), readPosition_(0) {
+	logPrint("lexer 생성자");
 	readChar();
 }
 
-Lexer* Lexer::createLexer(const std::string& input) {
+Lexer* Lexer::createLexerFromInput(const std::string& input) {
 	Lexer* lx = new Lexer(input);
 	return lx;
 }
+
+Lexer& Lexer::operator=(const Lexer& lexer) {
+	
+	logPrint("lexer operator=");
+
+	if (this != &lexer) {
+		input_ = lexer.input_;
+		position_ = lexer.position_;
+		readPosition_ = lexer.readPosition_;
+		ch_ = lexer.ch_;
+	}
+	return *this;
+}
+
+Lexer::Lexer(const Lexer& copy) :input_(copy.input_), position_(copy.position_), readPosition_(copy.readPosition_), ch_(copy.ch_) {
+	logPrint("lexer 복사생성자");
+}
+
+Lexer::~Lexer() {}
 
