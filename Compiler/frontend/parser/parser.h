@@ -1,9 +1,11 @@
 #pragma once
 //parser
+#include <vector>
 
 #include "../lexer/lexer.h"
 #include "../token/token.h"
 #include "../ast/ast.h"
+#include "../../globalUtils.h"
 
 class Parser {    // 1개 생성
 private:
@@ -11,17 +13,20 @@ private:
 	Token* curtoken_;  // 계속 변경이 되어야함
 	Token* peektoken_;
 
+	std::vector<std::string> errors_; // 파싱 에러 모음
+
 	Parser(const Lexer& lexer);
 	Parser(const std::string& input);
 	LetStatement* parseLetStatement(const Token* const let_token);
 	Statement* parseStatement(const Token* const curtoken);
 
 public:
-	bool IsCurTokenType(const TokenType& type);
-	bool IsPeekTokenType(const TokenType& type);
-	bool moveNextIfPeekTokenTypeIs(const TokenType& type);
+	void peekError(const TokenType& type);
+	void advanceToken();
+	bool isCurTokenType(const TokenType& type);
+	bool isPeekTokenType(const TokenType& type);
+	bool advanceTokenIfPeekTokenTypeIs(const TokenType& type);	
 
-	void MoveNextToken();
 
 	Program* parseProgram();
 	
