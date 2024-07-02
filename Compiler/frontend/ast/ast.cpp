@@ -5,7 +5,7 @@
 // test
 
 const std::vector<Statement*>& Program::getStatements() const {
-    return statements_;
+	return statements_;
 }
 //
 
@@ -41,10 +41,14 @@ std::string LetStatement::getTokenLiteral() const {
 }
 
 void LetStatement::statementNode() const {
-	
+
 }
 
-LetStatement::LetStatement(const Token* token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)),value_(nullptr) {}
+const Identifier* LetStatement::getVariableName() const {
+	return variable_name_;
+}
+
+LetStatement::LetStatement(const Token* token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)), value_(nullptr) {}
 
 //LetStatement::LetStatement(const LetStatement& copy) {
 //

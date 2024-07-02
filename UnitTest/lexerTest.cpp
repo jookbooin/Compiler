@@ -122,7 +122,7 @@ public:
 
 	TEST_METHOD(lexerMethod) {
 
-		Lexer* lx = Lexer::createLexer(input);
+		Lexer* lx = Lexer::createLexerFromInput(input);
 		
 		for (const auto& test : tests) {
 			Token* tok = lx->nextToken();

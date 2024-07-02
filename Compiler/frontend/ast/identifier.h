@@ -13,6 +13,7 @@ private:
 
 public:
 	std::string getTokenLiteral() const override;
+	std::string getValue() const;
 	void expressionNode() const override;
 
 	static Identifier* createIdentifierFromToken(const Token* const curtoken);

@@ -15,10 +15,10 @@ private:
 	std::vector<Statement*> statements_;
 
 public:
-	
+
 	std::string getTokenLiteral() const override;
 	void addStatement(Statement* const stm);
-	
+
 	Program();
 	static Program* createProgram();
 	//Program(const Program& copy);
@@ -36,6 +36,8 @@ private:
 public:
 	std::string getTokenLiteral() const override;
 	void statementNode() const override;
+
+	const Identifier* getVariableName() const;
 
 	LetStatement(const Token* const token, const Token* const name);
 	//LetStatement(const LetStatement& copy);
