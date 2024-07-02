@@ -1,7 +1,7 @@
 #include "identifier.h"
 
-std::string Identifier::tokenLiteral() const {
-	return "Identifier tokenLiteeral()";
+std::string Identifier::getTokenLiteral() const {
+	return token_->getLiteral();
 }
 
 void Identifier::expressionNode() const {

@@ -1,8 +1,21 @@
 #include "ast.h"
 
 // Program
-std::string Program::tokenLiteral() const {
-	return "Program tokenLiteral()";
+
+// test
+
+const std::vector<Statement*>& Program::getStatements() const {
+    return statements_;
+}
+//
+
+
+std::string Program::getTokenLiteral() const {
+	if (!statements_.empty() && statements_.front() != nullptr) {
+		return statements_.front()->getTokenLiteral();
+	}
+
+	return "Program empty!";
 }
 
 void Program::addStatement(Statement* const stm) {
@@ -23,8 +36,8 @@ Program::~Program() {}
 
 
 // LetStatement 
-std::string LetStatement::tokenLiteral() const {
-	return "letStatement tokenLiteral()";
+std::string LetStatement::getTokenLiteral() const {
+	return let_token_->getLiteral();
 }
 
 void LetStatement::statementNode() const {
