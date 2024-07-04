@@ -59,4 +59,17 @@ LetStatement::~LetStatement() {
 	delete variable_name_;
 }
 
+// Return
+ReturnStatement::ReturnStatement(const Token* const token) : return_token_(token), return_value_(nullptr){}
 
+std::string ReturnStatement::getTokenLiteral() const {
+	return return_token_->getLiteral();
+}
+
+void ReturnStatement::statementNode() const {
+
+}
+
+ReturnStatement::~ReturnStatement() {
+
+}

@@ -26,6 +26,11 @@ namespace parserTest
 
 	TEST_CLASS(parserTest) {
 
+
+public:
+
+	TEST_METHOD(testLet) {
+
 		std::string input = R"(
 	let x = 5;
 	let y = 10;
@@ -36,9 +41,6 @@ namespace parserTest
 		};
 
 		std::vector<Test> tests = { {"x"}, {"y"}, {"foobar"} };
-public:
-
-	TEST_METHOD(testLet) {
 		Lexer* lx = Lexer::createLexerFromInput(input);
 		Parser* p = Parser::createParserFromLexer(*lx);
 
@@ -48,7 +50,7 @@ public:
 		for (int i = 0; i < tests.size(); i++) {
 			Statement* stmt = pg->getStatements()[i];
 			if (!testLetStatement(stmt, tests[i].expectedIdentifier)) {
-				 Assert::Fail(L"testLetStatement failed");
+				Assert::Fail(L"testLetStatement failed");
 			}
 		}
 	}
@@ -72,6 +74,26 @@ public:
 		}
 
 		return true;
+
+	}
+
+	TEST_METHOD(testReturn) {
+		std::string input = R"(
+	return 5;
+	return 10;
+	return 838383;)";
+
+		Lexer* lx = Lexer::createLexerFromInput(input);
+		Parser* p = Parser::createParserFromLexer(*lx);
+
+		Program* pg = p->parseProgram();
+		Assert::AreEqual(static_cast<size_t>(3), pg->getStatements().size());
+
+		for (auto vs : pg->getStatements()) {
+		if (!(vs->getTokenLiteral() == "return")) {
+				Assert::Fail(L"testLetStatement failed");
+			}
+		}
 
 	}
 

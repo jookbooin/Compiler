@@ -9,7 +9,7 @@
 
 class Parser {    // 1개 생성
 private:
-	Lexer lexer_; // 1개 생성
+	Lexer lexer_; // 1개  ( parser 소유권 )
 	Token* curtoken_;  // 계속 변경이 되어야함
 	Token* peektoken_;
 
@@ -18,6 +18,7 @@ private:
 	Parser(const Lexer& lexer);
 	Parser(const std::string& input);
 	LetStatement* parseLetStatement(const Token* const let_token);
+	ReturnStatement* parseReturnStatement(const Token* const return_token);
 	Statement* parseStatement(const Token* const curtoken);
 
 public:

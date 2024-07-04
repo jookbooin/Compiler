@@ -12,7 +12,7 @@
 
 class Program : public Node { // 1개 생성
 private:
-	std::vector<Statement*> statements_;
+	std::vector<Statement*> statements_; // 소유권-> vector? 
 
 public:
 
@@ -43,4 +43,17 @@ public:
 	//LetStatement(const LetStatement& copy);
 	~LetStatement();
 
+};
+
+class ReturnStatement : public Statement {
+private:
+	const Token* return_token_;
+	Expression* return_value_;
+public:
+	std::string getTokenLiteral() const override;
+	void statementNode() const override;
+
+	ReturnStatement(const Token* const token);
+	// ReturnStatement(const ReturnStatement& copy);
+	~ReturnStatement();
 };

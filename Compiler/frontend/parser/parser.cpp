@@ -20,6 +20,7 @@ bool Parser::isPeekTokenType(const TokenType& type) {
 	return peektoken_->getType() == type;
 }
 
+// peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
 bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType& type) {
 	if (isPeekTokenType(type)) {
 		advanceToken();
@@ -55,10 +56,18 @@ LetStatement* Parser::parseLetStatement(const Token* const let_token) {
 	return new LetStatement(let_token, variable_name_token);
 }
 
+ReturnStatement* Parser::parseReturnStatement(const Token* const return_token) {
+	ReturnStatement* returnStatement = new ReturnStatement(return_token);
+	advanceToken();
+	return returnStatement;
+}
+
 Statement* Parser::parseStatement(const Token* const curtoken) {
 
 	if (isCurTokenType(TokenTypes::LET)) {
 		return parseLetStatement(curtoken);
+	} else if (isCurTokenType(TokenTypes::RETURN)) {
+		return parseReturnStatement(curtoken);
 	}
 
 	// 2. RETURN 
