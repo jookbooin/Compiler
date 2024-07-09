@@ -1,5 +1,77 @@
 #include "parser.h"
 
+// prefix
+Expression* Parser::parseIdentifier() {
+	return nullptr;
+}
+
+Expression* Parser::parseIntegerLiteral() {
+	return nullptr;
+}
+
+Expression* Parser::parsePrefixExpression() {
+	return nullptr;
+}
+
+Expression* Parser::parseBoolean() {
+	return nullptr;
+}
+
+Expression* Parser::parseIfExpression() {
+	return nullptr;
+}
+
+Expression* Parser::parseGroupedExpression() {
+	return nullptr;
+}
+
+Expression* Parser::parseFunctionLiteral() {
+	return nullptr;
+}
+
+// infix 
+Expression* Parser::parseInfixExpression(Expression* left) {
+	return nullptr;
+}
+
+void Parser::registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr) {
+	prefix_func_map[tokenType] = prefixFuncPtr;
+}
+
+void Parser::registerInfixFunc(TokenType tokenType, InfixFuncPtr infixFuncPtr) {
+	infix_func_map[tokenType] = infixFuncPtr;
+}
+
+void Parser::initializeFuncMaps() {
+	// prefix
+	registerPrefixFunc(TokenTypes::IDENT, &Parser::parseIdentifier);
+
+	registerPrefixFunc(TokenTypes::INT, &Parser::parseIntegerLiteral);
+
+	registerPrefixFunc(TokenTypes::BANG, &Parser::parsePrefixExpression);
+	registerPrefixFunc(TokenTypes::MINUS, &Parser::parsePrefixExpression);
+
+	registerPrefixFunc(TokenTypes::TRUE, &Parser::parseBoolean);
+	registerPrefixFunc(TokenTypes::FALSE, &Parser::parseBoolean);
+
+	registerPrefixFunc(TokenTypes::LPAREN, &Parser::parseGroupedExpression);
+
+	registerPrefixFunc(TokenTypes::IF, &Parser::parseIfExpression);
+
+	registerPrefixFunc(TokenTypes::FUNCTION, &Parser::parseFunctionLiteral);
+
+	// infix
+	registerInfixFunc(TokenTypes::PLUS, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::MINUS, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::SLASH, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::ASTERISK, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::EQ, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::NOT_EQ, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::LT, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::GT, &Parser::parseInfixExpression);
+	registerInfixFunc(TokenTypes::LPAREN, &Parser::parseInfixExpression);
+}
+
 void Parser::peekError(const TokenType& type) {
 	std::ostringstream oss;
 	oss << "expect TokenType : " << peektoken_->getType() << ", actual : " << type ;
@@ -20,7 +92,6 @@ bool Parser::isPeekTokenType(const TokenType& type) {
 	return peektoken_->getType() == type;
 }
 
-// peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
 bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType& type) {
 	if (isPeekTokenType(type)) {
 		advanceToken();
@@ -70,8 +141,6 @@ Statement* Parser::parseStatement(const Token* const curtoken) {
 		return parseReturnStatement(curtoken);
 	}
 
-	// 2. RETURN 
-
 	// 3. 
 
 	return nullptr;
@@ -95,7 +164,7 @@ Program* Parser::parseProgram() {
 
 		// 4. Program의 Statement에 추가 
 		if (stmt != nullptr) {
-			
+
 			// 유일한 객체로 만들어 전달?
 			root->addStatement(stmt);
 		}
@@ -108,17 +177,20 @@ Program* Parser::parseProgram() {
 }
 
 Parser::Parser(const Lexer& lexer) : lexer_(lexer), curtoken_(nullptr), peektoken_(nullptr) {
+	initializeFuncMaps();
 	advanceToken();
 	advanceToken();
 }
 
 Parser::Parser(const std::string& input) : lexer_(input), curtoken_(nullptr), peektoken_(nullptr) {
+	initializeFuncMaps();
 	advanceToken();
 	advanceToken();
 }
 
 Parser* Parser::createParserFromLexer(const Lexer& lexer) {
 	Parser* p = new Parser(lexer);
+
 	return p;
 }
 
