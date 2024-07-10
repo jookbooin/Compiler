@@ -1,14 +1,9 @@
 #include "ast.h"
 
 // Program
-
-// test
-
 const std::vector<Statement*>& Program::getStatements() const {
 	return statements_;
 }
-//
-
 
 std::string Program::getTokenLiteral() const {
 	if (!statements_.empty() && statements_.front() != nullptr) {
@@ -48,11 +43,15 @@ const Identifier* LetStatement::getVariableName() const {
 	return variable_name_;
 }
 
-LetStatement::LetStatement(const Token* token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)), value_(nullptr) {}
+LetStatement::LetStatement(const Token * token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)), value_(nullptr) {}
 
-//LetStatement::LetStatement(const LetStatement& copy) {
-//
-//}
+//LetStatement& LetStatement::operator=(const LetStatement & src) {}
+
+//LetStatement::LetStatement(LetStatement && src) noexcept {}
+
+//LetStatement& LetStatement::operator=(const LetStatement && src) noexcept {}
+
+//LetStatement::LetStatement(const LetStatement & copy) {}
 
 LetStatement::~LetStatement() {
 	delete let_token_;
@@ -60,7 +59,7 @@ LetStatement::~LetStatement() {
 }
 
 // Return
-ReturnStatement::ReturnStatement(const Token* const token) : return_token_(token), return_value_(nullptr){}
+ReturnStatement::ReturnStatement(const Token* const token) : return_token_(token), return_value_(nullptr) {}
 
 std::string ReturnStatement::getTokenLiteral() const {
 	return return_token_->getLiteral();
@@ -70,6 +69,53 @@ void ReturnStatement::statementNode() const {
 
 }
 
+//ReturnStatement& operator=(const ReturnStatement& src) {}
+
+//ReturnStatement::ReturnStatement(ReturnStatement && src) noexcept {}
+
+//ReturnStatement& operator=(const ReturnStatement&& src) noexcept {}
+
+//ReturnStatement::ReturnStatement(const ReturnStatement & copy) {}
+
 ReturnStatement::~ReturnStatement() {
 
+}
+
+// Expression
+std::string ExpressionStatement::getTokenLiteral() const {
+	return expression_token_->getLiteral();
+}
+
+void ExpressionStatement::statementNode() const {
+
+}
+
+ExpressionStatement::ExpressionStatement(const Token * expression_token, Expression * expression) : expression_token_(expression_token), expression_(expression) {
+	logPrint("ExpressionStatement 생성자");
+}
+
+//ExpressionStatement::ExpressionStatement(const ExpressionStatement & copy) {
+//	logPrint("ExpressionStatement 복사 생성자");
+//}
+
+//ExpressionStatement& ExpressionStatement::operator=(const ExpressionStatement& src) {
+//	logPrint("ExpressionStatement 대입 연산자");
+//
+//}
+
+//ExpressionStatement::ExpressionStatement(ExpressionStatement && src) noexcept {
+//	logPrint("ExpressionStatement 이동 생성자");
+//}
+
+//ExpressionStatement& ExpressionStatement::operator=(const ExpressionStatement&& src) noexcept {
+//	logPrint("ExpressionStatement 이동 대입 연산자");
+//
+//}
+
+ExpressionStatement::~ExpressionStatement() {
+
+}
+
+Expression* ExpressionStatement::getExpression() const {
+    return expression_;
 }
