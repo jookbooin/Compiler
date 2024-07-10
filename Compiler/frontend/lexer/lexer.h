@@ -26,7 +26,12 @@ public:
 
 	Lexer(const std::string& input);
 	static Lexer* createLexerFromInput(const std::string& input);
+	
 	Lexer& operator=(const Lexer& lexer);
+
+	Lexer(Lexer&& src) noexcept; // 이동 생성자
+	Lexer& operator=(Lexer&& src) noexcept ;
+
 	Lexer(const Lexer& copy);
 	~Lexer();
 

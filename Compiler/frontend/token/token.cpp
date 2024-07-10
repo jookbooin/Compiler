@@ -1,25 +1,5 @@
 #include "token.h"
 
-std::map<std::string, TokenType> TokenTypes::keywords = {
-	{"fn", TokenTypes::FUNCTION},
-	{"let", TokenTypes::LET},
-	{"true", TokenTypes::TRUE},
-	{"false", TokenTypes::FALSE},
-	{"if", TokenTypes::IF},
-	{"else", TokenTypes::ELSE},
-	{"return", TokenTypes::RETURN}
-};
-
-// keywords 검색
-TokenType TokenTypes::lookupIdent(const std::string ident) {
-	auto it = TokenTypes::keywords.find(ident);
-	if (it != TokenTypes::keywords.end()) {
-		return it->second;
-	}
-
-	return TokenTypes::IDENT;
-}
-
 TokenType Token::getType() const {
 	return type_;
 }
@@ -41,6 +21,14 @@ Token& Token::operator=(const Token& token) {
 	}
 
 	return *this;
+}
+
+Token::Token(const Token&& token) noexcept {
+
+}
+
+Token& Token::operator=(const Token&& src) noexcept {
+
 }
 
 Token::Token(const Token& copy) : type_(copy.type_), literal_(copy.literal_) {}
