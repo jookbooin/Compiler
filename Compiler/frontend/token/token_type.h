@@ -44,24 +44,9 @@ namespace TokenTypes {
 	const TokenType ELSE = "ELSE";
 	const TokenType RETURN = "RETURN";
 
-	std::map<std::string, TokenType> keywords = {
-		{"fn", FUNCTION},
-		{"let", LET},
-		{"true", TRUE},
-		{"false", FALSE},
-		{"if", IF},
-		{"else", ELSE},
-		{"return", RETURN}
-	};
+	extern std::map<std::string, TokenType> keywords ;
 
 	// keywords 검색
-	TokenType lookupIdent(const std::string ident) {
-		auto it = keywords.find(ident);
-		if (it != keywords.end()) {
-			return it->second;
-		}
-
-		return IDENT;
-	}
+	extern TokenType lookupIdent(const std::string ident);
 
 }  // namespace TokenTypes
