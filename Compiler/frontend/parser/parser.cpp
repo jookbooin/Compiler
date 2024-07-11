@@ -6,7 +6,15 @@ Expression* Parser::parseIdentifier() {
 }
 
 Expression* Parser::parseIntegerLiteral() {
-	return nullptr;
+	
+	Expression* expression = nullptr;
+	try {
+		expression = IntegerLiteral::createIntegerLiteralFromToken(curtoken_);
+	} catch (const ParsingException& e) { // string -> int 변환 불가 메서드 
+			addError(e.what());
+	}
+
+	return expression;
 }
 
 Expression* Parser::parsePrefixExpression() {
@@ -72,11 +80,15 @@ void Parser::initializeFuncMaps() {
 	registerInfixFunc(TokenTypes::LPAREN, &Parser::parseInfixExpression);
 }
 
+void Parser::addError(const std::string& error_info) {
+	errors_.push_back(error_info);
+}
+
 void Parser::peekError(const TokenType& type) {
 	std::ostringstream oss;
 	oss << "expect TokenType : " << peektoken_->getType() << ", actual : " << type ;
 
-	errors_.push_back(oss.str());
+	addError(oss.str());
 }
 
 void Parser::advanceToken() {
@@ -206,8 +218,8 @@ Expression* Parser::parseExpression(int left_token_RBP) {
 		return nullptr; // 예외 발생?
 	} 
 
-	PrefixFuncPtr prefix_func_ptr = it->second; 
-	leftExpression = (this->*prefix_func_ptr)();
+	PrefixFuncPtr prefix_func_ptr = it->second;   // map에서 함수 포인터 가져옴
+	leftExpression = (this->*prefix_func_ptr)(); // 클래스 함수 포인터 → 함수 호출
 
 	return leftExpression;
 }

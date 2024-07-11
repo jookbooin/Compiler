@@ -7,6 +7,7 @@
 #include "../ast/ast.h"
 #include "../../globalUtils.h"
 #include "parse_info.h"
+#include "../ast/integerLiteral/integer_literal.h"
 
 class Parser;
 
@@ -41,7 +42,9 @@ private:
 	void initializeFuncMaps(); // prefix_func_map, infix_func_map 초기화
 
 public:
+	void addError(const std::string& error_info);
 	void peekError(const TokenType& type);
+
 	void advanceToken();
 	bool isCurTokenType(const TokenType& type);
 	bool isPeekTokenType(const TokenType& type);
