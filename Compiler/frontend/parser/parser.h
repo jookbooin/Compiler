@@ -6,6 +6,7 @@
 #include "../token/token.h"
 #include "../ast/ast.h"
 #include "../../globalUtils.h"
+#include "parse_info.h"
 
 class Parser;
 
@@ -31,6 +32,8 @@ private:
 	Parser(const std::string& input);
 	LetStatement* parseLetStatement(const Token* const let_token);
 	ReturnStatement* parseReturnStatement(const Token* const return_token);
+	ExpressionStatement* parseExpressionStatement(const Token* const expression_token) ;
+
 	Statement* parseStatement(const Token* const curtoken);
 
 	void registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr); // prefix_func_map에 등록 
@@ -44,8 +47,10 @@ public:
 	bool isPeekTokenType(const TokenType& type);
 	bool advanceTokenIfPeekTokenTypeIs(const TokenType& type); //  peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
 
-	// prefix 파싱 메서드
 	Program* parseProgram();
+	Expression* parseExpression(int left_token_RBP); // 왼쪽 연산자(= 토큰)의 right_binding_power(= 연산자 우선순위) 전달 
+
+	// prefix 파싱 메서드
 	Expression* parseIdentifier();
 	Expression* parseIntegerLiteral();
 	Expression* parsePrefixExpression();

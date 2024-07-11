@@ -2,7 +2,7 @@
 
 // prefix
 Expression* Parser::parseIdentifier() {
-	return nullptr;
+	return Identifier::createIdentifierFromToken(curtoken_);
 }
 
 Expression* Parser::parseIntegerLiteral() {
@@ -133,12 +133,27 @@ ReturnStatement* Parser::parseReturnStatement(const Token* const return_token) {
 	return returnStatement;
 }
 
+ExpressionStatement* Parser::parseExpressionStatement(const Token* const expression_token) {
+	
+	Expression* expression = parseExpression(Operator::Priority::LOWEST);
+
+	ExpressionStatement* expression_statement = new ExpressionStatement(expression_token, expression); // 내부로 expression 소유권 전달
+	
+	if (isPeekTokenType(TokenTypes::SEMICOLON)) { // 
+		advanceToken();
+	}
+
+	return expression_statement;
+}
+
 Statement* Parser::parseStatement(const Token* const curtoken) {
 
 	if (isCurTokenType(TokenTypes::LET)) {
 		return parseLetStatement(curtoken);
 	} else if (isCurTokenType(TokenTypes::RETURN)) {
 		return parseReturnStatement(curtoken);
+	} else {
+		return parseExpressionStatement(curtoken);
 	}
 
 	// 3. 
@@ -174,6 +189,27 @@ Program* Parser::parseProgram() {
 	}
 
 	return root;
+}
+
+/// <summary>
+/// 재귀적으로 동작 /
+/// 매개변수는 왼쪽 연산자의 right_binding_power을 의미 / 
+/// [ + (5) * ] : 5가 + , * 의 우선순위를 통해 어느것을 먼저 처리할지 결정/
+/// </summary>
+Expression* Parser::parseExpression(int left_token_RBP) { 
+	
+	Expression* leftExpression;
+
+	// 1. prefix : + [5] *
+	auto it = prefix_func_map.find(curtoken_->getType());
+	if (it == prefix_func_map.end()) {
+		return nullptr; // 예외 발생?
+	} 
+
+	PrefixFuncPtr prefix_func_ptr = it->second; 
+	leftExpression = (this->*prefix_func_ptr)();
+
+	return leftExpression;
 }
 
 Parser::Parser(const Lexer& lexer) : lexer_(lexer), curtoken_(nullptr), peektoken_(nullptr) {
