@@ -5,6 +5,8 @@
 #include "../Compiler/globalUtils.cpp"
 #include "../Compiler/frontend/token/token.h"
 #include "../Compiler/frontend/token/token.cpp"
+#include "../Compiler/frontend/token/token_type.h"
+#include "../Compiler/frontend/token/token_type.cpp"
 #include "../Compiler/frontend/lexer/lexer.h"
 #include "../Compiler/frontend/lexer/lexer.cpp"
 
@@ -90,11 +92,35 @@ public:
 		Assert::AreEqual(static_cast<size_t>(3), pg->getStatements().size());
 
 		for (auto vs : pg->getStatements()) {
-		if (!(vs->getTokenLiteral() == "return")) {
+			if (!(vs->getTokenLiteral() == "return")) {
 				Assert::Fail(L"testLetStatement failed");
 			}
 		}
 
+	}
+
+	TEST_METHOD(testExpression) {
+		std::string input = R"(foobar;)";
+
+		Lexer* lx = Lexer::createLexerFromInput(input);
+		Parser* p = Parser::createParserFromLexer(*lx);
+
+		Program* pg = p->parseProgram();
+		Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+
+		Statement* stmt = pg->getStatements().front();
+		ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
+		if (exprStmt == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
+
+		Expression* expr = exprStmt->getExpression();
+		Identifier* ident = dynamic_cast<Identifier*>(expr);
+		if (ident == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
+
+		Assert::AreEqual(std::string("foobar"), ident->getTokenLiteral());
 	}
 
 	};

@@ -47,6 +47,6 @@ namespace TokenTypes {
 	extern std::map<std::string, TokenType> keywords ;
 
 	// keywords 검색
-	extern TokenType lookupIdent(const std::string ident);
+	TokenType lookupIdent(const std::string ident);
 
 }  // namespace TokenTypes
