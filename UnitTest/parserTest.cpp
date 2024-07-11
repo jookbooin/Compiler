@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
+#include "../Compiler/exception/exception.h"
+#include "../Compiler/exception/exception.cpp"
 #include "../Compiler/globalUtils.h"
 #include "../Compiler/globalUtils.cpp"
 #include "../Compiler/frontend/token/token.h"
@@ -16,6 +18,9 @@
 #include "../Compiler/frontend/ast/identifier.cpp"
 #include "../Compiler/frontend/parser/parser.h"
 #include "../Compiler/frontend/parser/parser.cpp"
+#include "../Compiler/frontend/ast/integerLiteral/integer_literal.h"
+#include "../Compiler/frontend/ast/integerLiteral/integer_literal.cpp"
+
 
 
 #include <vector>
@@ -121,6 +126,33 @@ public:
 		}
 
 		Assert::AreEqual(std::string("foobar"), ident->getTokenLiteral());
+	}
+
+	TEST_METHOD(testIntegerLiteral) {
+		std::string input = R"(5;)";
+
+		Lexer* lx = Lexer::createLexerFromInput(input);
+		Parser* p = Parser::createParserFromLexer(*lx);
+
+		Program* pg = p->parseProgram();
+
+		Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+
+		Statement* stmt = pg->getStatements().front();
+		ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
+		if (exprStmt == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
+
+		Expression* expr = exprStmt->getExpression();
+		IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(expr);
+		if (intl == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
+		
+		 Assert::AreEqual(static_cast<size_t>(5), static_cast<size_t>(intl->getValue()));
+
+		 Assert::AreEqual(std::string("5"), intl->getTokenLiteral());
 	}
 
 	};
