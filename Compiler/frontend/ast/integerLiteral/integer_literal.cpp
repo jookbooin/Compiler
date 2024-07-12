@@ -17,6 +17,8 @@ IntegerLiteral* IntegerLiteral::createIntegerLiteralFromToken(const Token* curto
 	if (is_digit(curtoken ->getLiteral())) {
 		return new IntegerLiteral(curtoken);
 	} else {
+		
+		// Token을 지워야 하나?
 		std::string msg = "could not parse \"" + curtoken->getLiteral() + "\" as integer";
 		throw new ParsingException(msg);
 	}

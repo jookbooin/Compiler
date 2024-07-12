@@ -2,14 +2,18 @@
 
 // prefix
 Expression* Parser::parseIdentifier() {
-	return Identifier::createIdentifierFromToken(curtoken_);
+	const Token* identifier_token = curtoken_;
+
+	return Identifier::createIdentifierFromToken(identifier_token);
 }
 
 Expression* Parser::parseIntegerLiteral() {
 	
+	const Token* integer_token = curtoken_;
+
 	Expression* expression = nullptr;
 	try {
-		expression = IntegerLiteral::createIntegerLiteralFromToken(curtoken_);
+		expression = IntegerLiteral::createIntegerLiteralFromToken(integer_token);
 	} catch (const ParsingException& e) { // string -> int 변환 불가 메서드 
 			addError(e.what());
 	}
@@ -18,6 +22,19 @@ Expression* Parser::parseIntegerLiteral() {
 }
 
 Expression* Parser::parsePrefixExpression() {
+
+	// 1. '-, !' operator 토큰 따로 저장 
+	const Token* prefix_token = curtoken_;
+
+	// 2. advanceToken
+	advanceCurToken();
+
+	/*
+	* 3. '5' right_expression 생성
+	*     '-, !' 의 RBP 전달 
+	*/
+	Expression* right_expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::PREFIX); 
+	
 	return nullptr;
 }
 
@@ -91,7 +108,7 @@ void Parser::peekError(const TokenType& type) {
 	addError(oss.str());
 }
 
-void Parser::advanceToken() {
+void Parser::advanceCurToken() {
 	curtoken_ = peektoken_;
 	peektoken_ = lexer_.nextToken();
 }
@@ -106,7 +123,7 @@ bool Parser::isPeekTokenType(const TokenType& type) {
 
 bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType& type) {
 	if (isPeekTokenType(type)) {
-		advanceToken();
+		advanceCurToken();
 		return true;
 	}
 
@@ -115,57 +132,71 @@ bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType& type) {
 	return false;
 }
 
-LetStatement* Parser::parseLetStatement(const Token* const let_token) {
+LetStatement* Parser::parseLetStatement() {
 
-	// 1. [let] five
+	// 1. [ let ] five =
+	const Token* let_token = curtoken_;
+
+	// let → [ five ] 
 	if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::IDENT)) {
 		return nullptr;
 	}
 
-	// 2. let [five]
-	Token* variable_name_token = curtoken_;
+	// 2. let [ five ] =
+	const Token* variable_name_token = curtoken_;
 
-	//if (!IsPeekTokenType(TokenTypes::ASSIGN)) {
+	// five → [ = ]
 	if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::ASSIGN)) {
 		return nullptr;
 	}
 
 	// 3. let five [ = ] 
 	while (!isCurTokenType(TokenTypes::SEMICOLON)) {
-		advanceToken();
+		advanceCurToken();
 	}
 
 	// 4. let five =  [ ; ]
 	return new LetStatement(let_token, variable_name_token);
 }
 
-ReturnStatement* Parser::parseReturnStatement(const Token* const return_token) {
+ReturnStatement* Parser::parseReturnStatement() {
+	
+	// 1. [ return ] exp
+	const Token* return_token = curtoken_;
 	ReturnStatement* returnStatement = new ReturnStatement(return_token);
-	advanceToken();
+
+	// return → [ exp ]
+	advanceCurToken();
 	return returnStatement;
 }
 
-ExpressionStatement* Parser::parseExpressionStatement(const Token* const expression_token) {
+ExpressionStatement* Parser::parseExpressionStatement() {
 	
-	Expression* expression = parseExpression(Operator::Priority::LOWEST);
+	/**
+	*  [ 1 ] + 2
+	*  [ 1 ] 
+	*/
+	const Token* expression_token = curtoken_;
+	
+	Expression* expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
 
 	ExpressionStatement* expression_statement = new ExpressionStatement(expression_token, expression); // 내부로 expression 소유권 전달
 	
 	if (isPeekTokenType(TokenTypes::SEMICOLON)) { // 
-		advanceToken();
+		advanceCurToken();
 	}
 
 	return expression_statement;
 }
 
-Statement* Parser::parseStatement(const Token* const curtoken) {
+Statement* Parser::parseStatementFromCurToken() {
 
 	if (isCurTokenType(TokenTypes::LET)) {
-		return parseLetStatement(curtoken);
+		return parseLetStatement();
 	} else if (isCurTokenType(TokenTypes::RETURN)) {
-		return parseReturnStatement(curtoken);
+		return parseReturnStatement();
 	} else {
-		return parseExpressionStatement(curtoken);
+		return parseExpressionStatement();
 	}
 
 	// 3. 
@@ -187,7 +218,7 @@ Program* Parser::parseProgram() {
 
 		// 3. let, return 명령문 파싱
 		// nullptr이 아닌 예외를 던지는 방법은?
-		Statement* stmt = parseStatement(curtoken_);
+		Statement* stmt = parseStatementFromCurToken();
 
 		// 4. Program의 Statement에 추가 
 		if (stmt != nullptr) {
@@ -197,7 +228,7 @@ Program* Parser::parseProgram() {
 		}
 
 		// 5. 다음 token 호출
-		advanceToken();
+		advanceCurToken();
 	}
 
 	return root;
@@ -208,13 +239,14 @@ Program* Parser::parseProgram() {
 /// 매개변수는 왼쪽 연산자의 right_binding_power을 의미 / 
 /// [ + (5) * ] : 5가 + , * 의 우선순위를 통해 어느것을 먼저 처리할지 결정/
 /// </summary>
-Expression* Parser::parseExpression(int left_token_RBP) { 
+Expression* Parser::parseExpressionWithLeftOperatorRBP(int left_operator_RBP) { 
 	
 	Expression* leftExpression;
 
 	// 1. prefix : + [5] *
 	auto it = prefix_func_map.find(curtoken_->getType());
 	if (it == prefix_func_map.end()) {
+		addError("prefix_func_map에서 " + curtoken_->getType() + "을 찾을 수 없습니다."); // 
 		return nullptr; // 예외 발생?
 	} 
 
@@ -226,14 +258,14 @@ Expression* Parser::parseExpression(int left_token_RBP) {
 
 Parser::Parser(const Lexer& lexer) : lexer_(lexer), curtoken_(nullptr), peektoken_(nullptr) {
 	initializeFuncMaps();
-	advanceToken();
-	advanceToken();
+	advanceCurToken();
+	advanceCurToken();
 }
 
 Parser::Parser(const std::string& input) : lexer_(input), curtoken_(nullptr), peektoken_(nullptr) {
 	initializeFuncMaps();
-	advanceToken();
-	advanceToken();
+	advanceCurToken();
+	advanceCurToken();
 }
 
 Parser* Parser::createParserFromLexer(const Lexer& lexer) {

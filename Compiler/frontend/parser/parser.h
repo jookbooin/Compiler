@@ -31,11 +31,11 @@ private:
 
 	Parser(const Lexer& lexer);
 	Parser(const std::string& input);
-	LetStatement* parseLetStatement(const Token* const let_token);
-	ReturnStatement* parseReturnStatement(const Token* const return_token);
-	ExpressionStatement* parseExpressionStatement(const Token* const expression_token) ;
+	LetStatement* parseLetStatement();
+	ReturnStatement* parseReturnStatement();
+	ExpressionStatement* parseExpressionStatement() ;
 
-	Statement* parseStatement(const Token* const curtoken);
+	Statement* parseStatementFromCurToken();
 
 	void registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr); // prefix_func_map에 등록 
 	void registerInfixFunc(TokenType tokenType, InfixFuncPtr infixFuncPtr); // infix_func_map에 등록
@@ -45,13 +45,13 @@ public:
 	void addError(const std::string& error_info);
 	void peekError(const TokenType& type);
 
-	void advanceToken();
+	void advanceCurToken();
 	bool isCurTokenType(const TokenType& type);
 	bool isPeekTokenType(const TokenType& type);
 	bool advanceTokenIfPeekTokenTypeIs(const TokenType& type); //  peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
 
 	Program* parseProgram();
-	Expression* parseExpression(int left_token_RBP); // 왼쪽 연산자(= 토큰)의 right_binding_power(= 연산자 우선순위) 전달 
+	Expression* parseExpressionWithLeftOperatorRBP(int left_token_RBP); // 왼쪽 연산자(= 토큰)의 right_binding_power(= 연산자 우선순위) 전달 
 
 	// prefix 파싱 메서드
 	Expression* parseIdentifier();

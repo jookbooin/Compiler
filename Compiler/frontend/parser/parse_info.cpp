@@ -3,7 +3,7 @@
 
 namespace Operator {
 
-	std::map<TokenType, Priority> priority_map = {
+	std::map<TokenType, Precedence> priority_map = {
 		{TokenTypes::EQ,       EQUALS},
 		{TokenTypes::NOT_EQ,   EQUALS},
 		{TokenTypes::LT,       LESSGREATER},

@@ -4,7 +4,7 @@
 
 namespace Operator {
 
-	enum Priority {
+	enum Precedence {
 		LOWEST = 1,  
 		EQUALS,      // ==
 		LESSGREATER, // > or <
@@ -14,5 +14,5 @@ namespace Operator {
 		CALL         // myFunction(X)
 	};
 	
-	extern std::map<TokenType, Priority> priority_map ;
+	extern std::map<TokenType, Precedence> priority_map ;
 }
