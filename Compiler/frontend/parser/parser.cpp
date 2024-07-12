@@ -26,7 +26,7 @@ Expression* Parser::parsePrefixExpression() {
 	// 1. '-, !' operator 토큰 따로 저장 
 	const Token* prefix_token = curtoken_;
 
-	// 2. advanceToken
+	// 2. - [ 5 ]
 	advanceCurToken();
 
 	/*
@@ -35,7 +35,10 @@ Expression* Parser::parsePrefixExpression() {
 	*/
 	Expression* right_expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::PREFIX); 
 	
-	return nullptr;
+	// [-5]
+	PrefixExpression* prefix_expression = PrefixExpression::createPrefixExpressionOf(prefix_token, right_expression);
+
+	return prefix_expression;
 }
 
 Expression* Parser::parseBoolean() {

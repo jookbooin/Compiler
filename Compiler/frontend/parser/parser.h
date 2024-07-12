@@ -8,6 +8,7 @@
 #include "../../globalUtils.h"
 #include "parse_info.h"
 #include "../ast/integerLiteral/integer_literal.h"
+#include "../ast/prefixExpression/prefixExpression.h"
 
 class Parser;
 
