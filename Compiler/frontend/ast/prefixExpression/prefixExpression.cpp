@@ -9,8 +9,8 @@ void PrefixExpression::expressionNode() const {
 }
 
 PrefixExpression::PrefixExpression(const Token* prefix_token, Expression* expression) : prefix_token_(prefix_token),
-	operator_(prefix_token->getLiteral()),
-	right_(expression){
+operator_(prefix_token->getLiteral()),
+right_(expression) {
 
 }
 

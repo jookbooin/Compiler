@@ -20,8 +20,8 @@
 #include "../Compiler/frontend/parser/parser.cpp"
 #include "../Compiler/frontend/ast/integerLiteral/integer_literal.h"
 #include "../Compiler/frontend/ast/integerLiteral/integer_literal.cpp"
-
-
+#include "../Compiler/frontend/ast/prefixExpression/prefixExpression.h"
+#include "../Compiler/frontend/ast/prefixExpression/prefixExpression.cpp"
 
 #include <vector>
 #include <string>
@@ -36,7 +36,29 @@ namespace parserTest
 
 public:
 
-	TEST_METHOD(testLet) {
+	bool testLetStatement(Statement* s, const std::string& name) {
+		if (s->getTokenLiteral() != "let") {
+			return false;
+		}
+
+		LetStatement* letStatement = dynamic_cast<LetStatement*>(s);
+		if (!letStatement) {
+			return false;
+		}
+
+		if (letStatement->getVariableName()->getValue() != name) {
+			return false;
+		}
+
+		if (letStatement->getVariableName()->getTokenLiteral() != name) {
+			return false;
+		}
+
+		return true;
+
+	}
+
+	TEST_METHOD(test_Let) {
 
 		std::string input = R"(
 	let x = 5;
@@ -62,29 +84,7 @@ public:
 		}
 	}
 
-	bool testLetStatement(Statement* s, const std::string& name) {
-		if (s->getTokenLiteral() != "let") {
-			return false;
-		}
-
-		LetStatement* letStatement = dynamic_cast<LetStatement*>(s);
-		if (!letStatement) {
-			return false;
-		}
-
-		if (letStatement->getVariableName()->getValue() != name) {
-			return false;
-		}
-
-		if (letStatement->getVariableName()->getTokenLiteral() != name) {
-			return false;
-		}
-
-		return true;
-
-	}
-
-	TEST_METHOD(testReturn) {
+	TEST_METHOD(test_Return) {
 		std::string input = R"(
 	return 5;
 	return 10;
@@ -101,10 +101,9 @@ public:
 				Assert::Fail(L"testLetStatement failed");
 			}
 		}
-
 	}
 
-	TEST_METHOD(testExpression) {
+	TEST_METHOD(test_Expression) {
 		std::string input = R"(foobar;)";
 
 		Lexer* lx = Lexer::createLexerFromInput(input);
@@ -128,7 +127,7 @@ public:
 		Assert::AreEqual(std::string("foobar"), ident->getTokenLiteral());
 	}
 
-	TEST_METHOD(testIntegerLiteral) {
+	TEST_METHOD(test_IntegerLiteral) {
 		std::string input = R"(5;)";
 
 		Lexer* lx = Lexer::createLexerFromInput(input);
@@ -149,10 +148,68 @@ public:
 		if (intl == nullptr) {
 			Assert::Fail(L"해당 타입이 아닙니다.");
 		}
-		
-		 Assert::AreEqual(static_cast<size_t>(5), static_cast<size_t>(intl->getValue()));
 
-		 Assert::AreEqual(std::string("5"), intl->getTokenLiteral());
+		Assert::AreEqual(static_cast<size_t>(5), static_cast<size_t>(intl->getValue()));
+
+		Assert::AreEqual(std::string("5"), intl->getTokenLiteral());
+	}
+
+	TEST_METHOD(test_PrefixExpression) {
+
+		struct PrefixTest {
+			std::string input;
+			std::string op;
+			int value;
+		};
+
+		const std::vector<PrefixTest> v = {
+			{"!5;","!",5},
+			{"-15;","-",15}
+		};
+
+		for (PrefixTest pft : v) {
+
+			Lexer* lx = Lexer::createLexerFromInput(pft.input);
+			Parser* p = Parser::createParserFromLexer(*lx);
+
+			Program* pg = p->parseProgram();
+
+			Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+
+			Statement* stmt = pg->getStatements().front();
+			ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
+			if (exprStmt == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			Expression* expr = exprStmt->getExpression();
+			PrefixExpression* pfe = dynamic_cast<PrefixExpression*>(expr);
+			if (pfe == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			if (pfe->getOperator() != pft.op) {
+				Assert::Fail(L"해당 연산자가 아닙니다.");
+			}
+
+			// Expression 타입 확인 == IntegerLiteral
+			IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(pfe->getRightExpression());
+			if (intl == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			if (intl->getValue() != pft.value) {
+				Assert::Fail(L"해당 값 이 아닙니다.");
+			}
+
+			if (intl->getTokenLiteral() != std::to_string(pft.value)) {
+				Assert::Fail(L"해당 값 이 아닙니다.");
+			}
+
+			delete lx;
+			delete p;
+			delete pg;
+		}
 	}
 
 	};

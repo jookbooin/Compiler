@@ -3,7 +3,7 @@
 #include "../expression.h"
 #include "../../token/token.h"
 
-class PrefixExpression : public Expression{
+class PrefixExpression : public Expression {
 private:
 	const Token* prefix_token_;
 	std::string operator_; // "!", "-"
