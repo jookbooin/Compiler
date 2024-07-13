@@ -8,14 +8,14 @@ Expression* Parser::parseIdentifier() {
 }
 
 Expression* Parser::parseIntegerLiteral() {
-	
+
 	const Token* integer_token = curtoken_;
 
 	Expression* expression = nullptr;
 	try {
 		expression = IntegerLiteral::createIntegerLiteralFromToken(integer_token);
 	} catch (const ParsingException& e) { // string -> int 변환 불가 메서드 
-			addError(e.what());
+		addError(e.what());
 	}
 
 	return expression;
@@ -31,10 +31,10 @@ Expression* Parser::parsePrefixExpression() {
 
 	/*
 	* 3. '5' right_expression 생성
-	*     '-, !' 의 RBP 전달 
+	*     '-, !' 의 RBP 전달
 	*/
-	Expression* right_expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::PREFIX); 
-	
+	Expression* right_expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::PREFIX);
+
 	// [-5]
 	PrefixExpression* prefix_expression = PrefixExpression::createPrefixExpressionOf(prefix_token, right_expression);
 
@@ -58,8 +58,29 @@ Expression* Parser::parseFunctionLiteral() {
 }
 
 // infix 
-Expression* Parser::parseInfixExpression(Expression* left) {
-	return nullptr;
+Expression* Parser::parseInfixExpression(Expression* left_expression) {
+
+	// 1. 1 [ + ] 2 * 3
+	Token* infix_token = curtoken_;
+
+	int left_operator_RBP = getLeftOperatorRBP();
+
+	//  + → [ 2 ]
+	advanceCurToken();
+
+	// 2. 1 + [ 2 ] * 3
+	Expression* right_expression = parseExpressionWithLeftOperatorRBP(left_operator_RBP); // +(rbp), *(lbp) 비교후 expression 비교
+
+	/*
+	* left : 1
+	* operator : + 
+	* right : ( 2 * 3 )
+	* 
+	* (1 + ( 2 * 3 ))
+	*/
+	InfixExpression* infix_expression = InfixExpression::createInfixExpressionOf(infix_token, left_expression, right_expression);
+
+	return infix_expression;
 }
 
 void Parser::registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr) {
@@ -111,6 +132,10 @@ void Parser::peekError(const TokenType& type) {
 	addError(oss.str());
 }
 
+const std::vector<std::string>& Parser::getErrors() const {
+	return errors_;
+}
+
 void Parser::advanceCurToken() {
 	curtoken_ = peektoken_;
 	peektoken_ = lexer_.nextToken();
@@ -133,6 +158,32 @@ bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType& type) {
 	// 에러 발생 
 	peekError(type);
 	return false;
+}
+
+int Parser::getCurTokenPrecedence() {
+	auto it = Operator::priority_map.find(curtoken_->getType());
+	if (it != Operator::priority_map.end()) {
+		return it->second;
+	}
+
+	return Operator::LOWEST;
+}
+
+int Parser::getPeekTokenPrecedence() {
+	auto it = Operator::priority_map.find(peektoken_->getType());
+	if (it != Operator::priority_map.end()) {
+		return it->second;
+	}
+
+	return Operator::LOWEST;
+}
+
+int Parser::getLeftOperatorRBP() {
+	return getCurTokenPrecedence();
+}
+
+int Parser::getRightOperatorLBP() {
+	return getPeekTokenPrecedence();
 }
 
 LetStatement* Parser::parseLetStatement() {
@@ -163,7 +214,7 @@ LetStatement* Parser::parseLetStatement() {
 }
 
 ReturnStatement* Parser::parseReturnStatement() {
-	
+
 	// 1. [ return ] exp
 	const Token* return_token = curtoken_;
 	ReturnStatement* returnStatement = new ReturnStatement(return_token);
@@ -174,17 +225,17 @@ ReturnStatement* Parser::parseReturnStatement() {
 }
 
 ExpressionStatement* Parser::parseExpressionStatement() {
-	
+
 	/**
 	*  [ 1 ] + 2
-	*  [ 1 ] 
+	*  [ 1 ]
 	*/
 	const Token* expression_token = curtoken_;
-	
+
 	Expression* expression = parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
 
 	ExpressionStatement* expression_statement = new ExpressionStatement(expression_token, expression); // 내부로 expression 소유권 전달
-	
+
 	if (isPeekTokenType(TokenTypes::SEMICOLON)) { // 
 		advanceCurToken();
 	}
@@ -242,21 +293,39 @@ Program* Parser::parseProgram() {
 /// 매개변수는 왼쪽 연산자의 right_binding_power을 의미 / 
 /// [ + (5) * ] : 5가 + , * 의 우선순위를 통해 어느것을 먼저 처리할지 결정/
 /// </summary>
-Expression* Parser::parseExpressionWithLeftOperatorRBP(int left_operator_RBP) { 
-	
-	Expression* leftExpression;
+Expression* Parser::parseExpressionWithLeftOperatorRBP(int left_operator_RBP) {
 
-	// 1. prefix : + [5] *
-	auto it = prefix_func_map.find(curtoken_->getType());
-	if (it == prefix_func_map.end()) {
+	Expression* left_expression;
+
+	// 1. prefix :1 + [ 2 ] * 3
+	auto prefix_it = prefix_func_map.find(curtoken_->getType());
+	if (prefix_it == prefix_func_map.end()) {
 		addError("prefix_func_map에서 " + curtoken_->getType() + "을 찾을 수 없습니다."); // 
 		return nullptr; // 예외 발생?
-	} 
+	}
 
-	PrefixFuncPtr prefix_func_ptr = it->second;   // map에서 함수 포인터 가져옴
-	leftExpression = (this->*prefix_func_ptr)(); // 클래스 함수 포인터 → 함수 호출
+	PrefixFuncPtr prefix_func_ptr = prefix_it->second;   // map에서 함수 포인터 가져옴
 
-	return leftExpression;
+	// 2. [ 2 ]
+	left_expression = (this->*prefix_func_ptr)(); // 클래스 함수 포인터 → 함수 호출
+
+	// 3. infix : 1 + [ 2 ] * 3
+	while (!isPeekTokenType(TokenTypes::SEMICOLON) && left_operator_RBP < getRightOperatorLBP()) {
+		auto infix_it = infix_func_map.find(peektoken_->getType());
+		if (infix_it == infix_func_map.end()) {
+			addError("infix_func_map에서 " + peektoken_->getType() + "을 찾을 수 없습니다."); // 
+			return nullptr;
+		}
+		
+		// 4. 1 + 2 [ * ] 3
+		advanceCurToken();
+		InfixFuncPtr infix_func_ptr = infix_it->second;
+
+		// 5. (1 + ( 2 * 3 )) 
+		left_expression = (this->*infix_func_ptr)(left_expression);
+	}
+
+	return left_expression;
 }
 
 Parser::Parser(const Lexer& lexer) : lexer_(lexer), curtoken_(nullptr), peektoken_(nullptr) {

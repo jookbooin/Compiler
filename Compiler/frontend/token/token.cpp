@@ -1,14 +1,14 @@
 #include "token.h"
 
-TokenType Token::getType() const {
+const TokenType& Token::getType() const {
 	return type_;
 }
 
-std::string Token::getLiteral() const {
+const std::string& Token::getLiteral() const {
 	return literal_;
 }
 
-Token::Token(const TokenType type, const std::string literal) : type_(type), literal_(literal) {
+Token::Token(const TokenType& type, const std::string& literal) : type_(type), literal_(literal) {
 }
 
 Token::Token() : type_(TokenTypes::ILLEGAL), literal_("") {}
@@ -30,4 +30,3 @@ Token& Token::operator=(const Token& token) {
 Token::Token(const Token& copy) : type_(copy.type_), literal_(copy.literal_) {}
 
 Token::~Token() {}
-//Token::Token(const std::string literal) : literal_(literal){}

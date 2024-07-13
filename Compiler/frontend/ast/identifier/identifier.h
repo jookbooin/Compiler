@@ -2,8 +2,8 @@
 // identifier
 
 #include <string>
-#include "Expression.h"
-#include "../token/token.h"
+#include "../expression.h"
+#include "../../token/token.h"
 #include "../../globalUtils.h"
 
 class Identifier : public Expression {
@@ -13,8 +13,8 @@ private:
 
 public:
 	std::string getTokenLiteral() const override;
-	std::string getValue() const;
 	void expressionNode() const override;
+	std::string getValue() const;
 
 	static Identifier* createIdentifierFromToken(const Token* const curtoken);
 

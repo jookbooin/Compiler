@@ -9,7 +9,7 @@
 #include "node.h"
 #include "statement.h"
 #include "expression.h"
-#include "identifier.h"
+#include "identifier/identifier.h"
 
 
 class Program : public Node { // 1개 생성

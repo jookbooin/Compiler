@@ -9,6 +9,7 @@
 #include "parse_info.h"
 #include "../ast/integerLiteral/integer_literal.h"
 #include "../ast/prefixExpression/prefixExpression.h"
+#include "../ast/infixExpression/infixExpression.h"
 
 class Parser;
 
@@ -45,11 +46,16 @@ private:
 public:
 	void addError(const std::string& error_info);
 	void peekError(const TokenType& type);
+	const std::vector<std::string>& getErrors() const;
 
 	void advanceCurToken();
 	bool isCurTokenType(const TokenType& type);
 	bool isPeekTokenType(const TokenType& type);
 	bool advanceTokenIfPeekTokenTypeIs(const TokenType& type); //  peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
+	int getCurTokenPrecedence();
+	int getPeekTokenPrecedence();
+	int getLeftOperatorRBP();
+	int getRightOperatorLBP();
 
 	Program* parseProgram();
 	Expression* parseExpressionWithLeftOperatorRBP(int left_token_RBP); // 왼쪽 연산자(= 토큰)의 right_binding_power(= 연산자 우선순위) 전달 
@@ -64,7 +70,7 @@ public:
 	Expression* parseFunctionLiteral();
 
 	// infix 파싱 메서드
-	Expression* parseInfixExpression(Expression* left); 
+	Expression* parseInfixExpression(Expression* left_expression); 
 
 	static Parser* createParserFromLexer(const Lexer& lexer);
 	static Parser* createParserFromInput(const std::string& input);

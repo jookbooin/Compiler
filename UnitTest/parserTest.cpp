@@ -14,14 +14,18 @@
 
 #include "../Compiler/frontend/ast/ast.h"
 #include "../Compiler/frontend/ast/ast.cpp"
-#include "../Compiler/frontend/ast/identifier.h"
-#include "../Compiler/frontend/ast/identifier.cpp"
+#include "../Compiler/frontend/ast/identifier/identifier.h"
+#include "../Compiler/frontend/ast/identifier/identifier.cpp"
 #include "../Compiler/frontend/parser/parser.h"
 #include "../Compiler/frontend/parser/parser.cpp"
+#include "../Compiler/frontend/parser/parse_info.h"
+#include "../Compiler/frontend/parser/parse_info.cpp"
 #include "../Compiler/frontend/ast/integerLiteral/integer_literal.h"
 #include "../Compiler/frontend/ast/integerLiteral/integer_literal.cpp"
 #include "../Compiler/frontend/ast/prefixExpression/prefixExpression.h"
 #include "../Compiler/frontend/ast/prefixExpression/prefixExpression.cpp"
+#include "../Compiler/frontend/ast/infixExpression/infixExpression.h"
+#include "../Compiler/frontend/ast/infixExpression/infixExpression.cpp"
 
 #include <vector>
 #include <string>
@@ -192,24 +196,135 @@ public:
 				Assert::Fail(L"해당 연산자가 아닙니다.");
 			}
 
-			// Expression 타입 확인 == IntegerLiteral
-			IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(pfe->getRightExpression());
-			if (intl == nullptr) {
-				Assert::Fail(L"해당 타입이 아닙니다.");
-			}
-
-			if (intl->getValue() != pft.value) {
-				Assert::Fail(L"해당 값 이 아닙니다.");
-			}
-
-			if (intl->getTokenLiteral() != std::to_string(pft.value)) {
-				Assert::Fail(L"해당 값 이 아닙니다.");
+			if (!testIntegerLiteral(pfe->getRightExpression(), pft.value)) {
+				Assert::Fail(L"테스트 실패.");
 			}
 
 			delete lx;
 			delete p;
 			delete pg;
 		}
+	}
+
+	TEST_METHOD(test_InfixExpression) {
+		struct InfixTest {
+			std::string input;
+			int left_value;
+			std::string op;
+			int right_value;
+		};
+
+		const std::vector<InfixTest> v = {
+			{"5 + 5;", 5, "+", 5},
+			{"5 - 5;", 5, "-", 5},
+			{"5 * 5;", 5, "*", 5},
+			{"5 / 5;", 5, "/", 5},
+			{"5 > 5;", 5, ">", 5},
+			{"5 < 5;", 5, "<", 5},
+			{"5 == 5;", 5, "==", 5},
+			{"5 != 5;", 5, "!=", 5},
+		};
+
+		for (InfixTest ift : v) {
+
+			Lexer* lx = Lexer::createLexerFromInput(ift.input);
+			Parser* p = Parser::createParserFromLexer(*lx);
+
+			Program* pg = p->parseProgram();
+
+			Assert::AreEqual(static_cast<size_t>(8), pg->getStatements().size());
+
+			Statement* stmt = pg->getStatements().front();
+			ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
+			if (exprStmt == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			Expression* expr = exprStmt->getExpression();
+			InfixExpression* ife = dynamic_cast<InfixExpression*>(expr);
+			if (ife == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			if (!testIntegerLiteral(ife->getLeftExpression(), ift.left_value)) {
+				Assert::Fail(L"테스트 실패.");
+			}
+
+			if (ife->getOperator() != ift.op) {
+				Assert::Fail(L"해당 연산자가 아닙니다.");
+			}
+
+			if (!testIntegerLiteral(ife->getRightExpression(), ift.right_value)) {
+				Assert::Fail(L"테스트 실패.");
+			}
+
+			delete lx;
+			delete p;
+			delete pg;
+		}
+
+	}
+
+
+	TEST_METHOD(test_Parser) {
+		struct ParserTest {
+			std::string input;
+			std::string expected;
+		};
+
+		const std::vector<ParserTest> v = {
+			{"-a * b", "((-a) * b)"},
+			{"!-a", "(!(-a))"},
+			{"a + b + c", "((a + b) + c)"},
+			{"a + b - c", "((a + b) - c)"},
+			{"a * b * c", "((a * b) * c)"},
+			{"a * b / c", "((a * b) / c)"},
+			{"a + b / c", "(a + (b / c))"},
+			{"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+			{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+			{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+			{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+			{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"}
+		};
+
+		for (ParserTest pt : v) {
+			Lexer* lx = Lexer::createLexerFromInput(pt.input);
+			Parser* p = Parser::createParserFromLexer(*lx);
+
+			Program* pg = p->parseProgram();
+
+			if (!checkParserErrors(p)) {
+				Assert::Fail(L"테스트 실패.");
+			}
+
+			delete lx;
+			delete p;
+		}
+	}
+
+	bool testIntegerLiteral(Expression* expression, int value) {
+		IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(expression);
+		if (intl == nullptr) {
+			return false;
+		}
+
+		if (intl->getValue() != value) {
+			return false;
+		}
+
+		if (intl->getTokenLiteral() != std::to_string(value)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	bool checkParserErrors(const Parser* p) {
+		if (p->getErrors().size() == 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	};

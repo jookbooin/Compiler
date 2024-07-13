@@ -10,11 +10,10 @@ private:
 public:
 	Token();
 
-	//Token(const std::string literal);
-	TokenType getType() const;
-	std::string getLiteral() const;
+	const TokenType& getType() const;
+	const std::string& getLiteral() const;
 
-	Token(const TokenType type, const std::string literal);
+	Token(const TokenType& type, const std::string& literal);
 	Token& operator=(const Token& token);
 	//Token(const Token&& token) noexcept;
 	//Token& operator=(const Token&& src) noexcept;
