@@ -8,14 +8,14 @@ void PrefixExpression::expressionNode() const {
 
 }
 
-PrefixExpression::PrefixExpression(const Token* prefix_token, Expression* expression) : prefix_token_(prefix_token),
+PrefixExpression::PrefixExpression(const Token* prefix_token, Expression* right) : prefix_token_(prefix_token),
 operator_(prefix_token->getLiteral()),
-right_(expression) {
+right_expression_(right) {
 
 }
 
-PrefixExpression* PrefixExpression::createPrefixExpressionOf(const Token* prefix_token, Expression* expression) {
-	return new PrefixExpression(prefix_token, expression);
+PrefixExpression* PrefixExpression::createPrefixExpressionOf(const Token* prefix_token, Expression* right) {
+	return new PrefixExpression(prefix_token, right);
 }
 
 std::string PrefixExpression::getOperator() const {
@@ -23,5 +23,5 @@ std::string PrefixExpression::getOperator() const {
 }
 
 Expression* PrefixExpression::getRightExpression() const {
-	return right_;
+	return right_expression_;
 }

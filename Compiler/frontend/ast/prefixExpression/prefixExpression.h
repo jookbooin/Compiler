@@ -7,9 +7,9 @@ class PrefixExpression : public Expression {
 private:
 	const Token* prefix_token_;
 	std::string operator_; // "!", "-"
-	Expression* right_;
+	Expression* right_expression_;
 
-	PrefixExpression(const Token* prefix_token, Expression* expression);
+	PrefixExpression(const Token* prefix_token, Expression* right);
 public:
 	std::string getTokenLiteral() const;
 	void expressionNode() const override;
@@ -17,6 +17,6 @@ public:
 	std::string getOperator() const;
 	Expression* getRightExpression() const;
 
-	static PrefixExpression* createPrefixExpressionOf(const Token* prefix_token, Expression* expression);
+	static PrefixExpression* createPrefixExpressionOf(const Token* prefix_token, Expression* right_expression);
 
 };
