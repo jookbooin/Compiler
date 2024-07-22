@@ -10,7 +10,7 @@ void start() {
 			break;
 		}
 
-		Lexer* lx = Lexer::createLexer(input);
+		Lexer* lx = Lexer::createLexerFromInput(input);
 
 		// token도 언젠가는 지워야함.
 		for (Token* tok = lx->nextToken(); tok->getType() != "EOF"; tok = lx->nextToken()) {

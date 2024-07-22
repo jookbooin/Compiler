@@ -152,15 +152,55 @@ int Lexer::getReadPosition() const {
 	return readPosition_;
 }
 
-Lexer::Lexer(const Lexer& copy) :input_(copy.input_), position_(copy.position_), readPosition_(copy.readPosition_), ch_(copy.ch_) {}
-
 Lexer::Lexer(const std::string& input)
 	: input_(input), position_(0), readPosition_(0) {
+	logPrint("lexer 생성자");
 	readChar();
 }
 
-Lexer* Lexer::createLexer(const std::string& input) {
+Lexer* Lexer::createLexerFromInput(const std::string& input) {
 	Lexer* lx = new Lexer(input);
 	return lx;
 }
+
+Lexer::Lexer(const Lexer& copy) :input_(copy.input_), position_(copy.position_), readPosition_(copy.readPosition_), ch_(copy.ch_) {
+	logPrint("lexer 복사생성자");
+}
+
+Lexer& Lexer::operator=(const Lexer& lexer) {
+
+	logPrint("lexer operator=");
+
+	if (this != &lexer) {
+		input_ = lexer.input_;
+		position_ = lexer.position_;
+		readPosition_ = lexer.readPosition_;
+		ch_ = lexer.ch_;
+	}
+	return *this;
+}
+
+Lexer::Lexer(Lexer&& src) noexcept :
+	input_(std::move(src.input_)),
+	position_(src.position_),
+	readPosition_(src.readPosition_),
+	ch_(src.ch_) {
+
+	logPrint("lexer 이동생성자");
+}
+
+Lexer& Lexer::operator=(Lexer&& src) noexcept {
+    logPrint("lexer 이동 대입 연산자");
+
+    if (this != &src) {
+        input_ = std::move(src.input_);
+        position_ = src.position_;
+        readPosition_ = src.readPosition_;
+        ch_ = src.ch_;
+    }
+
+    return *this;
+}
+
+Lexer::~Lexer() {}
 

@@ -1,53 +1,6 @@
 #pragma once
 
-#include <string>
-#include <map>
-
-typedef std::string TokenType;
-
-namespace TokenTypes {
-	// 상수 정의
-	const TokenType ILLEGAL = "ILLEGAL";
-	const TokenType kEOF = "EOF";
-
-	// 식별자 (Identifiers + literals)
-	const TokenType IDENT = "IDENT";  // add, foobar, x, y, ...
-	const TokenType INT = "INT";      // 1343456
-
-	// 연산자 (Operators)
-	const TokenType ASSIGN = "=";
-	const TokenType PLUS = "+";
-	const TokenType MINUS = "-";
-	const TokenType BANG = "!";
-	const TokenType ASTERISK = "*";
-	const TokenType SLASH = "/";
-	const TokenType LT = "<";
-	const TokenType GT = ">";
-	const TokenType EQ = "==";
-	const TokenType NOT_EQ = "!=";
-
-
-	// 구분자 (Delimiters)
-	const TokenType COMMA = ",";
-	const TokenType SEMICOLON = ";";
-	const TokenType LPAREN = "(";
-	const TokenType RPAREN = ")";
-	const TokenType LBRACE = "{";
-	const TokenType RBRACE = "}";
-
-	// 예약어 (Keywords)
-	const TokenType FUNCTION = "FUNCTION";
-	const TokenType LET = "LET";
-	const TokenType TRUE = "TRUE";
-	const TokenType FALSE = "FALSE";
-	const TokenType IF = "IF";
-	const TokenType ELSE = "ELSE";
-	const TokenType RETURN = "RETURN";
-
-	extern std::map<std::string, TokenType> keywords;
-	extern TokenType lookupIdent(const std::string ident);
-
-}  // namespace TokenTypes
+#include "token_type.h"
 
 class Token {
 private:
@@ -57,8 +10,13 @@ private:
 public:
 	Token();
 
-	//Token(const std::string literal);
-	TokenType getType() const;
-	std::string getLiteral() const;
-	Token(const TokenType type, const std::string literal);
+	const TokenType& getType() const;
+	const std::string& getLiteral() const;
+
+	Token(const TokenType& type, const std::string& literal);
+	Token& operator=(const Token& token);
+	//Token(const Token&& token) noexcept;
+	//Token& operator=(const Token&& src) noexcept;
+	Token(const Token& copy);
+	~Token();
 };

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../token/token.h"
+#include "../../globalUtils.h"
 
 class Lexer {
 private:
@@ -11,8 +12,7 @@ private:
 	int position_; // 현재 위치
 	int readPosition_; // 다음 위치
 	char ch_;
-	Lexer(const std::string& input);
-
+	
 public:
 	void skipWhitespace();
 	void readChar();
@@ -24,7 +24,15 @@ public:
 	int getPosition() const;
 	int getReadPosition() const;
 
-	Lexer(const Lexer& copy);
-	static Lexer* createLexer(const std::string& input);
+	Lexer(const std::string& input);
+	static Lexer* createLexerFromInput(const std::string& input);
 	
+	Lexer& operator=(const Lexer& lexer);
+
+	Lexer(Lexer&& src) noexcept; // 이동 생성자
+	Lexer& operator=(Lexer&& src) noexcept ;
+
+	Lexer(const Lexer& copy);
+	~Lexer();
+
 };
