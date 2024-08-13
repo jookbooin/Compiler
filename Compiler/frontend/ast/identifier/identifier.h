@@ -1,28 +1,27 @@
 #pragma once
 // identifier
 
-#include <string>
-#include "../expression.h"
-#include "../../token/token.h"
 #include "../../globalUtils.h"
+#include "../../token/token.h"
+#include "../expression.h"
+#include <string>
 
 class Identifier : public Expression {
-private:
-	const Token* token_; // token 객체가 변하지 않는다 -> 소유권 주어야 하나?
-	std::string value_;
+  private:
+    std::unique_ptr<Token> token_;
+    std::string value_;
 
-public:
-	std::string getTokenLiteral() const override;
-	void expressionNode() const override;
-	std::string getValue() const;
+  public:
+    Identifier(std::unique_ptr<Token> token);
+    ~Identifier();
+    Identifier(const Identifier &copy) = delete;
+    Identifier &operator=(const Identifier &src) = delete;
+    Identifier(Identifier &&src) noexcept;
+    Identifier &operator=(Identifier &&src) noexcept;
 
-	static Identifier* createIdentifierFromToken(const Token* const curtoken);
+    std::string getTokenLiteral() const override;
+    void expressionNode() const override;
+    std::string getValue() const;
 
-	Identifier(const Token* const token);
-	//Identifier& operator=(const Identifier& src);
-	//Identifier(const Identifier&& src);
-	//Identifier& operator=(const Identifier&& src);
-	//Identifier(const Identifier& copy);
-	~Identifier();
-
+    static std::unique_ptr<Identifier> createUniqueFrom(std::unique_ptr<Token> curtoken);
 };

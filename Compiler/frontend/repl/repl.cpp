@@ -10,15 +10,12 @@ void start() {
 			break;
 		}
 
-		Lexer* lx = Lexer::createLexerFromInput(input);
+		//Lexer* lx = Lexer::createLexerFromInput(input);
 
 		// token도 언젠가는 지워야함.
-		for (Token* tok = lx->nextToken(); tok->getType() != "EOF"; tok = lx->nextToken()) {
-            std::cout << "[Type:" << tok->getType() << "  Literal:" << tok->getLiteral() << "]" << std::endl;
-			//delete tok;
-        }
-
-		delete lx;
+		/*for (Token* tok = lx->nextToken(); tok->getType() != "EOF"; tok = lx->nextToken()) {
+            std::cout << "[Type:" << tok->getType() << "  Literal:" << tok->getLiteral() << "]" << std::endl;	
+        }*/
 
 	}
 
