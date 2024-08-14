@@ -2,8 +2,8 @@
 // expression
 
 #include "node.h"
-#include  <variant>
+#include <variant>
 class Expression : public Node {
-public:
-	virtual void expressionNode() const = 0;
+  public:
+    virtual void expressionNode() const = 0;
 };

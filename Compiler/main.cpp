@@ -7,14 +7,14 @@
 
 int main() {
 
-  // start();
-  std::string input = "let five = 5;";
+    // start();
+    std::string input = "let five = 5;";
 
-  Lexer lx(input);
-  std::cout <<lx.getInput() << std::endl;
-  Parser parser(std::move(lx));
+    Lexer lx(input);
+    std::cout << lx.getInput() << std::endl;
+    Parser parser(std::move(lx));
 
-  //std::cout <<lx.getInput() << std::endl; // 이동되었기 떄문에 나오지 않음
+    // std::cout <<lx.getInput() << std::endl; // 이동되었기 떄문에 나오지 않음
 
-  return 0;
+    return 0;
 }
