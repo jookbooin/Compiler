@@ -2,24 +2,27 @@
 #include "CppUnitTest.h"
 #include "../Compiler/frontend/token/token.h"
 #include "../Compiler/frontend/token/token.cpp"
+#include "../Compiler/globalUtils.cpp"
+#include "../Compiler/globalUtils.h"
+#include "../Compiler/exception/exception.cpp"
+#include "../Compiler/exception/exception.h"
 
-#include <vector>
+
 #include <string>
+#include <vector>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-namespace tokenTest
-{
+namespace tokenTest {
 
-	TEST_CLASS(tokenTest) {
+TEST_CLASS(tokenTest){
 
-public:
+    public :
 
-	TEST_METHOD(tokenMethod) {
-		Token* tok = new Token(TokenTypes::INT, "1");
-		Assert::AreEqual(TokenTypes::INT, tok->getType());
-		delete tok;  
-	}
-
-	};
+        TEST_METHOD(tokenMethod){
+            std::unique_ptr<Token> tok = std::make_unique<Token>(TokenTypes::INT, "1");
+Assert::AreEqual(TokenTypes::INT, tok->getType());
+} // namespace tokenTest
+}
+;
 }

@@ -1,121 +1,159 @@
 #include "ast.h"
 
 // Program
-const std::vector<Statement*>& Program::getStatements() const {
-	return statements_;
+Program::Program() {
+}
+
+Program::~Program() {
 }
 
 std::string Program::getTokenLiteral() const {
-	if (!statements_.empty() && statements_.front() != nullptr) {
-		return statements_.front()->getTokenLiteral();
-	}
+    if (!statements_.empty() && statements_.front() != nullptr) {
+        return statements_.front()->getTokenLiteral();
+    }
 
-	return "Program empty!";
+    return "Program empty!";
 }
 
-void Program::addStatement(Statement* const stm) {
-	statements_.push_back(stm);
+void Program::addStatement(std::unique_ptr<Statement> stm) {
+    statements_.push_back(std::move(stm));
 }
 
-//Program::Program(const Program& copy) {
-//
-//}
-
-Program::Program() {}
-
-Program* Program::createProgram() {
-	return new Program();
+Program *Program::create() {
+    return new Program();
 }
 
-Program::~Program() {}
+const std::vector<std::unique_ptr<Statement>> &Program::getStatements() const {
+    return statements_;
+}
 
+// LetStatement
+LetStatement::LetStatement(std::unique_ptr<Token> let_token,
+                           std::unique_ptr<Identifier> name,
+                           std::unique_ptr<Expression> value)
+    : let_token_(std::move(let_token)), variable_name_(std::move(name)), value_(std::move(value)) {
+    logPrint("LetStatement 생성자");
+}
 
-// LetStatement 
+LetStatement::~LetStatement() {
+    logPrint("LetStatement 소멸자");
+}
+
+LetStatement::LetStatement(LetStatement &&src) noexcept
+    : let_token_(std::move(src.let_token_)), variable_name_(std::move(src.variable_name_)),
+      value_(std::move(src.value_)) {
+    logPrint("LetStatement 이동 생성자");
+}
+
+LetStatement &LetStatement::operator=(LetStatement &&src) noexcept {
+    if (this != &src) {
+        let_token_ = std::move(src.let_token_);
+        variable_name_ = std::move(src.variable_name_);
+        value_ = std::move(src.value_);
+        logPrint("LetStatement 이동 대입 연산자");
+    }
+    return *this;
+}
+
 std::string LetStatement::getTokenLiteral() const {
-	return let_token_->getLiteral();
+    return let_token_->getLiteral();
 }
 
 void LetStatement::statementNode() const {
-
 }
 
-const Identifier* LetStatement::getVariableName() const {
-	return variable_name_;
+const Identifier *LetStatement::getVariableName() const {
+    return variable_name_.get();
 }
 
-LetStatement::LetStatement(const Token * token, const Token* const name) : let_token_(token), variable_name_(Identifier::createIdentifierFromToken(name)), value_(nullptr) {}
-
-//LetStatement& LetStatement::operator=(const LetStatement & src) {}
-
-//LetStatement::LetStatement(LetStatement && src) noexcept {}
-
-//LetStatement& LetStatement::operator=(const LetStatement && src) noexcept {}
-
-//LetStatement::LetStatement(const LetStatement & copy) {}
-
-LetStatement::~LetStatement() {
-	delete let_token_;
-	delete variable_name_;
+const Expression *LetStatement::getValue() const {
+    return value_.get();
 }
 
-// Return
-ReturnStatement::ReturnStatement(const Token* const token) : return_token_(token), return_value_(nullptr) {}
+std::unique_ptr<LetStatement> LetStatement::createUniqueOf(std::unique_ptr<Token> let_token,
+                                                           std::unique_ptr<Identifier> name,
+                                                           std::unique_ptr<Expression> value) {
+    return std::make_unique<LetStatement>(std::move(let_token), std::move(name), std::move(value));
+}
+
+// ReturnStatement
+ReturnStatement::ReturnStatement(std::unique_ptr<Token> return_token,
+                                 std::unique_ptr<Expression> value)
+    : return_token_(std::move(return_token)), value_(std::move(value)) {
+    logPrint("ReturnStatement 생성자");
+}
+
+ReturnStatement::~ReturnStatement() {
+    logPrint("ReturnStatement 소멸자");
+}
+
+ReturnStatement::ReturnStatement(ReturnStatement &&src) noexcept
+    : return_token_(std::move(src.return_token_)), value_(std::move(src.value_)) {
+    logPrint("ReturnStatement 이동생성자");
+}
 
 std::string ReturnStatement::getTokenLiteral() const {
-	return return_token_->getLiteral();
+    return return_token_->getLiteral();
 }
 
 void ReturnStatement::statementNode() const {
-
 }
 
-//ReturnStatement& operator=(const ReturnStatement& src) {}
-
-//ReturnStatement::ReturnStatement(ReturnStatement && src) noexcept {}
-
-//ReturnStatement& operator=(const ReturnStatement&& src) noexcept {}
-
-//ReturnStatement::ReturnStatement(const ReturnStatement & copy) {}
-
-ReturnStatement::~ReturnStatement() {
-
+const Expression *ReturnStatement::getValue() const {
+    return value_.get();
 }
 
-// Expression
+std::unique_ptr<ReturnStatement>
+ReturnStatement::createUniqueOf(std::unique_ptr<Token> return_token,
+                                std::unique_ptr<Expression> value) {
+    return std::make_unique<ReturnStatement>(std::move(return_token), std::move(value));
+}
+
+// ExpressionStatement
+// ExpressionStatement::ExpressionStatement(std::unique_ptr<Token> expression_token,
+//                                         std::unique_ptr<Expression> expression)
+//    : expression_token_(std::move(expression_token)), expression_(std::move(expression)) {
+//    logPrint("ExpressionStatement 생성자");
+//}
+
+ExpressionStatement::ExpressionStatement(std::unique_ptr<Expression> expression)
+    : expression_(std::move(expression)) {
+    logPrint("ExpressionStatement 생성자");
+}
+
+ExpressionStatement::~ExpressionStatement() {
+    logPrint("ExpressionStatement 소멸자");
+}
+
+// ExpressionStatement::ExpressionStatement(ExpressionStatement &&src) noexcept
+//     : expression_token_(std::move(src.expression_token_)),
+//     expression_(std::move(src.expression_)) { logPrint("ExpressionStatement 이동 생성자");
+// }
+
+ExpressionStatement::ExpressionStatement(ExpressionStatement &&src) noexcept
+    : expression_(std::move(src.expression_)) {
+    logPrint("ExpressionStatement 이동 생성자");
+}
+
 std::string ExpressionStatement::getTokenLiteral() const {
-	return expression_token_->getLiteral();
+    return expression_->getTokenLiteral();
 }
 
 void ExpressionStatement::statementNode() const {
-
 }
 
-ExpressionStatement::ExpressionStatement(const Token * expression_token, Expression * expression) : expression_token_(expression_token), expression_(expression) {
-	logPrint("ExpressionStatement 생성자");
+Expression *ExpressionStatement::getExpression() const {
+    return expression_.get();
 }
 
-//ExpressionStatement::ExpressionStatement(const ExpressionStatement & copy) {
-//	logPrint("ExpressionStatement 복사 생성자");
-//}
+// std::unique_ptr<ExpressionStatement>
+// ExpressionStatement::createUniqueOf(std::unique_ptr<Token> expression_token,
+//                                     std::unique_ptr<Expression> expression) {
+//     return std::make_unique<ExpressionStatement>(std::move(expression_token),
+//                                                  std::move(expression));
+// }
 
-//ExpressionStatement& ExpressionStatement::operator=(const ExpressionStatement& src) {
-//	logPrint("ExpressionStatement 대입 연산자");
-//
-//}
-
-//ExpressionStatement::ExpressionStatement(ExpressionStatement && src) noexcept {
-//	logPrint("ExpressionStatement 이동 생성자");
-//}
-
-//ExpressionStatement& ExpressionStatement::operator=(const ExpressionStatement&& src) noexcept {
-//	logPrint("ExpressionStatement 이동 대입 연산자");
-//
-//}
-
-ExpressionStatement::~ExpressionStatement() {
-
-}
-
-Expression* ExpressionStatement::getExpression() const {
-    return expression_;
+std::unique_ptr<ExpressionStatement>
+ExpressionStatement::createUniqueFrom(std::unique_ptr<Expression> expression) {
+    return std::make_unique<ExpressionStatement>(std::move(expression));
 }

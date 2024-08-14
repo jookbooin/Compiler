@@ -1,24 +1,29 @@
 #pragma once
 
-#include "../expression.h"
 #include "../../token/token.h"
+#include "../expression.h"
 
 class InfixExpression : public Expression {
-private:
-	const Token* infix_token_;
-	Expression* left_expression_;
-	std::string operator_;
-	Expression* right_expression_;
+  private:
+    std::unique_ptr<Token> op_token_;
+    std::unique_ptr<Expression> left_expression_;
+    std::string operator_;
+    std::unique_ptr<Expression> right_expression_;
 
-	InfixExpression(const Token* infix_token, Expression* left, Expression* right);
-public:
-	std::string getTokenLiteral() const;
-	void expressionNode() const override;
+  public:
+    InfixExpression(std::unique_ptr<Token> op_token,
+                    std::unique_ptr<Expression> left,
+                    std::unique_ptr<Expression> right);
+    ~InfixExpression();
 
-	std::string getOperator() const;
-	Expression* getLeftExpression();
-	Expression* getRightExpression();
+    std::string getTokenLiteral() const;
+    void expressionNode() const override;
 
-	static InfixExpression* createInfixExpressionOf(const Token* infix_token, Expression* left, Expression* right);
+    std::string getOperator() const;
+    const Expression *getLeftExpression() const;
+    const Expression *getRightExpression() const;
 
+    static std::unique_ptr<InfixExpression> createUniqueOf(std::unique_ptr<Token> op_token,
+                                                           std::unique_ptr<Expression> left,
+                                                           std::unique_ptr<Expression> right);
 };

@@ -1,22 +1,25 @@
 #pragma once
 
-#include "../expression.h"
 #include "../../token/token.h"
+#include "../expression.h"
 
 class PrefixExpression : public Expression {
-private:
-	const Token* prefix_token_;
-	std::string operator_; // "!", "-"
-	Expression* right_expression_;
+  private:
+    std::unique_ptr<Token> prefix_token_;
+    std::string operator_; // "!", "-"
+    std::unique_ptr<Expression> right_expression_;
 
-	PrefixExpression(const Token* prefix_token, Expression* right);
-public:
-	std::string getTokenLiteral() const;
-	void expressionNode() const override;
+  public:
+    PrefixExpression(std::unique_ptr<Token> prefix_token, std::unique_ptr<Expression> right);
+    ~PrefixExpression();
+    PrefixExpression(const PrefixExpression &copy) = delete;
 
-	std::string getOperator() const;
-	Expression* getRightExpression() const;
+    std::string getTokenLiteral() const;
+    void expressionNode() const override;
 
-	static PrefixExpression* createPrefixExpressionOf(const Token* prefix_token, Expression* right_expression);
+    std::string getOperator() const;
+    const Expression *getRightExpression() const;
 
+    static std::unique_ptr<PrefixExpression> createUniqueOf(std::unique_ptr<Token> prefix_token,
+                                                            std::unique_ptr<Expression> right);
 };

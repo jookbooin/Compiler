@@ -1,89 +1,104 @@
 #pragma once
 // ast
 
-#include <string>
-#include <vector>
 #include "../../globalUtils.h"
-
 #include "../token/token.h"
-#include "node.h"
-#include "statement.h"
 #include "expression.h"
 #include "identifier/identifier.h"
-
+#include "node.h"
+#include "statement.h"
+#include <string>
+#include <vector>
 
 class Program : public Node { // 1개 생성
-private:
-	std::vector<Statement*> statements_; // 소유권-> vector? 
+  private:
+    std::vector<std::unique_ptr<Statement>> statements_;
 
-public:
+  public:
+    std::string getTokenLiteral() const override;
+    void addStatement(std::unique_ptr<Statement> stm);
 
-	std::string getTokenLiteral() const override;
-	void addStatement(Statement* const stm);
+    Program();
+    ~Program();
+    Program(const Program &copy) = delete;
+    Program &operator=(const Program &src) = delete;
 
-	Program();
-	static Program* createProgram();
-	//Program(const Program& copy);
-	~Program();
-
-	const std::vector<Statement*>& getStatements() const;
+    const std::vector<std::unique_ptr<Statement>> &getStatements() const;
+    static Program *create();
 };
 
+// 템플릿 ??
 class LetStatement : public Statement {
-private:
-	const Token* let_token_;
-	const Identifier* variable_name_;
-	Expression* value_;
+  private:
+    std::unique_ptr<Token> let_token_;
+    std::unique_ptr<Identifier> variable_name_;
+    std::unique_ptr<Expression> value_;
 
-public:
-	std::string getTokenLiteral() const override;
-	void statementNode() const override;
+  public:
+    LetStatement(std::unique_ptr<Token> let,
+                 std::unique_ptr<Identifier> name,
+                 std::unique_ptr<Expression> value);
+    ~LetStatement();
+    LetStatement(const LetStatement &copy) = delete;
+    LetStatement &operator=(const LetStatement &src) = delete;
+    LetStatement(LetStatement &&src) noexcept;
+    LetStatement &operator=(LetStatement &&src) noexcept;
 
-	const Identifier* getVariableName() const;
+    std::string getTokenLiteral() const override;
+    void statementNode() const override;
 
-	LetStatement(const Token* const token, const Token* const name);
-	//LetStatement& operator=(const LetStatement& src);
-	//LetStatement(LetStatement&& src) noexcept;
-	//LetStatement& operator=(const LetStatement&& src) noexcept;
+    const Identifier *getVariableName() const;
+    const Expression *getValue() const;
 
-	//LetStatement(const LetStatement& copy);
-	~LetStatement();
+    static std::unique_ptr<LetStatement> createUniqueOf(std::unique_ptr<Token> let_token,
+                                                        std::unique_ptr<Identifier> name,
+                                                        std::unique_ptr<Expression> value);
 };
 
 class ReturnStatement : public Statement {
-private:
-	const Token* return_token_;
-	Expression* return_value_;
-public:
-	std::string getTokenLiteral() const override;
-	void statementNode() const override;
+  private:
+    std::unique_ptr<Token> return_token_;
+    std::unique_ptr<Expression> value_;
 
-	ReturnStatement(const Token* const token);
-	//ReturnStatement& operator=(const ReturnStatement& src);
-	//ReturnStatement(ReturnStatement&& src) noexcept;
-	//ReturnStatement& operator=(const ReturnStatement&& src) noexcept;
+  public:
+    ReturnStatement(std::unique_ptr<Token> token, std::unique_ptr<Expression> value);
+    ~ReturnStatement();
+    ReturnStatement(const ReturnStatement &copy) = delete;
+    ReturnStatement &operator=(const ReturnStatement &src) = delete;
+    ReturnStatement(ReturnStatement &&src) noexcept;
+    ReturnStatement &operator=(ReturnStatement &&src) noexcept = delete;
 
-	//ReturnStatement(const ReturnStatement& copy);
-	~ReturnStatement();
+    std::string getTokenLiteral() const override;
+    void statementNode() const override;
+
+    const Expression *getValue() const;
+
+    static std::unique_ptr<ReturnStatement> createUniqueOf(std::unique_ptr<Token> return_token,
+                                                           std::unique_ptr<Expression> value);
 };
 
 class ExpressionStatement : public Statement {
-private:
-	const Token* expression_token_;
-	Expression* expression_;
+  private:
+    // std::unique_ptr<Token> expression_token_;
+    std::unique_ptr<Expression> expression_;
 
-public:
-	std::string getTokenLiteral() const override;
-	void statementNode() const override;
+  public:
+    // ExpressionStatement(std::unique_ptr<Token> expression_token,
+    //                     std::unique_ptr<Expression> expression);
+    ExpressionStatement(std::unique_ptr<Expression> expression);
+    ~ExpressionStatement();
+    ExpressionStatement(const ExpressionStatement &copy) = delete;
+    ExpressionStatement &operator=(const ExpressionStatement &src) = delete;
+    ExpressionStatement(ExpressionStatement &&src) noexcept;
+    ExpressionStatement &operator=(ExpressionStatement &&src) noexcept = delete;
 
-	ExpressionStatement(const Token* expression_token, Expression* expression);
-	//ExpressionStatement& operator=(const ExpressionStatement& src);
-	//ExpressionStatement(ExpressionStatement&& src) noexcept;
-	//ExpressionStatement& operator=(const ExpressionStatement&& src) noexcept;
+    std::string getTokenLiteral() const override;
+    void statementNode() const override;
 
-	//ExpressionStatement(const ExpressionStatement& copy);
-	~ExpressionStatement();
+    Expression *getExpression() const;
 
-	Expression* getExpression() const;
-
+    // static std::unique_ptr<ExpressionStatement>
+    // createUniqueOf(std::unique_ptr<Token> return_token, std::unique_ptr<Expression> expression);
+    static std::unique_ptr<ExpressionStatement>
+    createUniqueFrom(std::unique_ptr<Expression> expression);
 };
