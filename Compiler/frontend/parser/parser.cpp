@@ -57,7 +57,6 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression() {
 std::unique_ptr<Expression>
 Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
 
-
     // [ + ] BP
     int left_operator_RBP = getLeftOperatorRBP();
 

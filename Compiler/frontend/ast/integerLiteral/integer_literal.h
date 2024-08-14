@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../../globalUtils.h"
 #include "../../../exception/exception.h"
+#include "../../../globalUtils.h"
 #include "../../token/token.h"
 #include "../expression.h"
 
