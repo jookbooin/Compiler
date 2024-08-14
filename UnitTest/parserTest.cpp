@@ -26,6 +26,8 @@
 #include "../Compiler/frontend/ast/prefixExpression/prefixExpression.cpp"
 #include "../Compiler/frontend/ast/infixExpression/infixExpression.h"
 #include "../Compiler/frontend/ast/infixExpression/infixExpression.cpp"
+#include "../Compiler/frontend/ast/boolean/boolean.h"
+#include "../Compiler/frontend/ast/boolean/boolean.cpp"
 
 #include <vector>
 #include <string>
@@ -42,7 +44,7 @@ namespace parserTest
 public:
 
 	// expected_value 값 검증용
-	bool TestExpectedValue(const Expression* expression, const std::variant<int, std::string>& value) {
+	bool TestExpectedValue(const Expression* expression, const std::variant<int, std::string, bool>& value) {
 		switch (value.index()) {
 			case 0: { // int
 				const IntegerLiteral* temp = dynamic_cast<const IntegerLiteral*>(expression);
@@ -54,6 +56,15 @@ public:
 			case 1: { // string
 				const Identifier* temp = dynamic_cast<const Identifier*>(expression);
 				if (temp && temp->getValue() == std::get<std::string>(value)) { 
+					return true;
+				}
+			
+				break;
+			}
+			
+			case 2: {
+                const Boolean *temp = dynamic_cast<const Boolean *>(expression);
+				if (temp && temp->getValue() == std::get<bool>(value)) {
 					return true;
 				}
 				break;
@@ -78,11 +89,11 @@ public:
 		struct Test {
 			std::string input;
 			std::string expected_identifier;
-			std::variant<int, std::string> expected_value;
+			std::variant<int, std::string, bool> expected_value;
 		};
 
-		std::vector<Test> tests = { {"let x = 5;", "x",5},
-									{"let y = 10;", "y",10}, 
+		std::vector<Test> tests = { {"let x = 5;", "x", 5},
+									{"let y = true;", "y", true},
 									{"let foobar = y;", "foobar", "y"}};
 		
 
@@ -123,11 +134,12 @@ public:
 
 		struct Test {
 			std::string input;
-			std::variant<int, std::string> expected_value;
+			std::variant<int, std::string, bool> expected_value;
 		};
 
 		std::vector<Test> tests = { {"return 5;", 5},
-									{"return foobar;", "foobar"}};
+								    {"return true;", true},
+								    {"return foobar;", "foobar"}};
 		
 		for (int i = 0; i < tests.size(); i++) {
             Lexer lx(tests[i].input);
@@ -219,14 +231,17 @@ public:
 		struct PrefixTest {
 			std::string input;
 			std::string expected_op;
-			std::variant<int, std::string> expected_value;
+			std::variant<int, std::string, bool> expected_value;
 		};
 
+		
 		std::vector<PrefixTest> tests = {
 			{"!5;", "!", 5},
 			{"-15;", "-", 15},
 			{"!foobar;", "!", "foobar"},
-			{"-foobar;", "-", "foobar"}
+			{"-foobar;", "-", "foobar"},
+			{"!true;", "!", true},
+			{"!false;", "!", false}
 		};
 
 		for (int i = 0; i < tests.size(); i++) {
@@ -266,9 +281,9 @@ public:
 
 		struct InfixTest {
 			std::string input;
-			std::variant<int, std::string> expected_left_value;
+			std::variant<int, std::string, bool> expected_left_value;
 			std::string expected_op;
-			std::variant<int, std::string> expected_right_value;
+			std::variant<int, std::string, bool> expected_right_value;
 		};
 
 		const std::vector<InfixTest> tests = {
@@ -287,7 +302,10 @@ public:
 			{"foobar > barfoo;", "foobar", ">", "barfoo"},
 			{"foobar < barfoo;", "foobar", "<", "barfoo"},
 			{"foobar == barfoo;", "foobar", "==", "barfoo"},
-			{"foobar != barfoo;", "foobar", "!=", "barfoo"}
+			{"foobar != barfoo;", "foobar", "!=", "barfoo"},
+			{"true == true", true, "==", true},
+			{"true != false", true, "!=", false},
+			{"false == false", false, "==", false}
 		};
 
 		for (int i = 0; i < tests.size(); i++) {
@@ -330,6 +348,45 @@ public:
 
 	}
 
+	TEST_METHOD(test_Boolean) {
+		struct Test {
+			std::string input;
+			bool expected_value;
+			std::string expected_literal;
+		};
+
+		const std::vector<Test> tests = { 
+			{"true;", true, "true"}, 
+			{"false;", false, "false"}
+		};
+
+
+		for (int i = 0; i < tests.size(); i++) {
+            
+			Lexer lx(tests[i].input);
+			Parser p(std::move(lx));
+
+ 			Program* pg = p.parseProgram();
+			Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+
+			Statement* stmt = pg->getStatements()[0].get();
+			ExpressionStatement* temp = dynamic_cast<ExpressionStatement*>(stmt);
+
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			Expression* expr = temp->getExpression();
+			Boolean* bexpr = dynamic_cast<Boolean*>(expr);
+			if (bexpr == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			Assert::AreEqual(tests[i].expected_value, bexpr->getValue());
+			Assert::AreEqual(tests[i].expected_literal, bexpr->getTokenLiteral());
+		}
+	}
+
 
 	TEST_METHOD(test_Parser) {
 		struct ParserTest {
@@ -349,7 +406,11 @@ public:
 			{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
 			{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
 			{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
-			{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"}
+			{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+			{"true", "true"},
+			{"false", "false"},
+			{"3 > 5 == false", "((3 > 5) == false)"},
+			{"3 < 5 == true", "((3 < 5) == true)"}
 		};
 
 		for (int i = 0; i < tests.size(); i++) {
