@@ -45,7 +45,6 @@ const TokenType RETURN = "RETURN";
 
 extern std::map<std::string, TokenType> keywords;
 
-// keywords 검색
-TokenType lookupIdent(const std::string ident);
+TokenType findIdentType(const std::string ident);
 
 } // namespace TokenTypes

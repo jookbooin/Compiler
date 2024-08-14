@@ -178,7 +178,7 @@ std::unique_ptr<Token> Lexer::nextToken() {
     default:
         if (isLetter(ch_)) {
             std::string literal = readIdentifier();
-            TokenType type = TokenTypes::lookupIdent(literal);
+            TokenType type = TokenTypes::findIdentType(literal); // let, func, boolean, if, else, Ident
 
             tok = newToken(type, literal);
             return tok;

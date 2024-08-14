@@ -6,6 +6,7 @@
 #include "../ast/ast.h"
 #include "../ast/infixExpression/infixExpression.h"
 #include "../ast/integerLiteral/integer_literal.h"
+#include "../ast/boolean/boolean.h"
 #include "../ast/prefixExpression/prefixExpression.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"

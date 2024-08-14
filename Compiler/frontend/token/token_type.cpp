@@ -9,7 +9,7 @@ std::map<std::string, TokenType> keywords = {{"fn", FUNCTION},
                                              {"else", ELSE},
                                              {"return", RETURN}};
 
-TokenType lookupIdent(const std::string ident) {
+TokenType findIdentType(const std::string ident) {
     auto it = keywords.find(ident);
     if (it != keywords.end()) {
         return it->second;

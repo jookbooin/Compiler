@@ -82,7 +82,8 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
 }
 
 std::unique_ptr<Expression> Parser::parseBoolean() {
-    return nullptr;
+    bool flag = isCurTokenType(TokenTypes::TRUE);
+    return Boolean::createUniqueOf(std::move(curtoken_),flag);
 }
 
 std::unique_ptr<Expression> Parser::parseIfExpression() {
