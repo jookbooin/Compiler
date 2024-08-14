@@ -5,13 +5,13 @@
 
 class InfixExpression : public Expression {
   private:
-    std::unique_ptr<Token> infix_token_;
+    std::unique_ptr<Token> op_token_;
     std::unique_ptr<Expression> left_expression_;
     std::string operator_;
     std::unique_ptr<Expression> right_expression_;
 
   public:
-    InfixExpression(std::unique_ptr<Token> infix_token,
+    InfixExpression(std::unique_ptr<Token> op_token,
                     std::unique_ptr<Expression> left,
                     std::unique_ptr<Expression> right);
     ~InfixExpression();
@@ -20,10 +20,10 @@ class InfixExpression : public Expression {
     void expressionNode() const override;
 
     std::string getOperator() const;
-    // Expression* getLeftExpression();
-    // Expression* getRightExpression();
+    const Expression *getLeftExpression() const;
+    const Expression *getRightExpression() const;
 
-    static std::unique_ptr<InfixExpression> createUniqueOf(std::unique_ptr<Token> infix_token,
+    static std::unique_ptr<InfixExpression> createUniqueOf(std::unique_ptr<Token> op_token,
                                                            std::unique_ptr<Expression> left,
                                                            std::unique_ptr<Expression> right);
 };

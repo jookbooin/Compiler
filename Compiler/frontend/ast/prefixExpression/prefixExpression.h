@@ -18,7 +18,7 @@ class PrefixExpression : public Expression {
     void expressionNode() const override;
 
     std::string getOperator() const;
-    Expression *getRightExpression() const;
+    const Expression *getRightExpression() const;
 
     static std::unique_ptr<PrefixExpression> createUniqueOf(std::unique_ptr<Token> prefix_token,
                                                             std::unique_ptr<Expression> right);

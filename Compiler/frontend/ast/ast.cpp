@@ -110,9 +110,14 @@ ReturnStatement::createUniqueOf(std::unique_ptr<Token> return_token,
 }
 
 // ExpressionStatement
-ExpressionStatement::ExpressionStatement(std::unique_ptr<Token> expression_token,
-                                         std::unique_ptr<Expression> expression)
-    : expression_token_(std::move(expression_token)), expression_(std::move(expression)) {
+// ExpressionStatement::ExpressionStatement(std::unique_ptr<Token> expression_token,
+//                                         std::unique_ptr<Expression> expression)
+//    : expression_token_(std::move(expression_token)), expression_(std::move(expression)) {
+//    logPrint("ExpressionStatement 생성자");
+//}
+
+ExpressionStatement::ExpressionStatement(std::unique_ptr<Expression> expression)
+    : expression_(std::move(expression)) {
     logPrint("ExpressionStatement 생성자");
 }
 
@@ -120,13 +125,18 @@ ExpressionStatement::~ExpressionStatement() {
     logPrint("ExpressionStatement 소멸자");
 }
 
+// ExpressionStatement::ExpressionStatement(ExpressionStatement &&src) noexcept
+//     : expression_token_(std::move(src.expression_token_)),
+//     expression_(std::move(src.expression_)) { logPrint("ExpressionStatement 이동 생성자");
+// }
+
 ExpressionStatement::ExpressionStatement(ExpressionStatement &&src) noexcept
-    : expression_token_(std::move(src.expression_token_)), expression_(std::move(src.expression_)) {
+    : expression_(std::move(src.expression_)) {
     logPrint("ExpressionStatement 이동 생성자");
 }
 
 std::string ExpressionStatement::getTokenLiteral() const {
-    return expression_token_->getLiteral();
+    return expression_->getTokenLiteral();
 }
 
 void ExpressionStatement::statementNode() const {
@@ -136,9 +146,14 @@ Expression *ExpressionStatement::getExpression() const {
     return expression_.get();
 }
 
+// std::unique_ptr<ExpressionStatement>
+// ExpressionStatement::createUniqueOf(std::unique_ptr<Token> expression_token,
+//                                     std::unique_ptr<Expression> expression) {
+//     return std::make_unique<ExpressionStatement>(std::move(expression_token),
+//                                                  std::move(expression));
+// }
+
 std::unique_ptr<ExpressionStatement>
-ExpressionStatement::createUniqueOf(std::unique_ptr<Token> expression_token,
-                                    std::unique_ptr<Expression> expression) {
-    return std::make_unique<ExpressionStatement>(std::move(expression_token),
-                                                 std::move(expression));
+ExpressionStatement::createUniqueFrom(std::unique_ptr<Expression> expression) {
+    return std::make_unique<ExpressionStatement>(std::move(expression));
 }

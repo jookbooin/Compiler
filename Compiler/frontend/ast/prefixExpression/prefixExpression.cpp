@@ -22,7 +22,7 @@ std::string PrefixExpression::getOperator() const {
     return operator_;
 }
 
-Expression *PrefixExpression::getRightExpression() const {
+const Expression *PrefixExpression::getRightExpression() const {
     return right_expression_.get();
 }
 

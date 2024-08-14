@@ -24,7 +24,7 @@ class Program : public Node { // 1개 생성
     Program &operator=(const Program &src) = delete;
 
     const std::vector<std::unique_ptr<Statement>> &getStatements() const;
-    static Program* create();
+    static Program *create();
 };
 
 // 템플릿 ??
@@ -79,12 +79,13 @@ class ReturnStatement : public Statement {
 
 class ExpressionStatement : public Statement {
   private:
-    std::unique_ptr<Token> expression_token_;
+    // std::unique_ptr<Token> expression_token_;
     std::unique_ptr<Expression> expression_;
 
   public:
-    ExpressionStatement(std::unique_ptr<Token> expression_token,
-                        std::unique_ptr<Expression> expression);
+    // ExpressionStatement(std::unique_ptr<Token> expression_token,
+    //                     std::unique_ptr<Expression> expression);
+    ExpressionStatement(std::unique_ptr<Expression> expression);
     ~ExpressionStatement();
     ExpressionStatement(const ExpressionStatement &copy) = delete;
     ExpressionStatement &operator=(const ExpressionStatement &src) = delete;
@@ -96,6 +97,8 @@ class ExpressionStatement : public Statement {
 
     Expression *getExpression() const;
 
+    // static std::unique_ptr<ExpressionStatement>
+    // createUniqueOf(std::unique_ptr<Token> return_token, std::unique_ptr<Expression> expression);
     static std::unique_ptr<ExpressionStatement>
-    createUniqueOf(std::unique_ptr<Token> return_token, std::unique_ptr<Expression> expression);
+    createUniqueFrom(std::unique_ptr<Expression> expression);
 };

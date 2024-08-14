@@ -53,31 +53,16 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression() {
     return PrefixExpression::createUniqueOf(std::move(prefix_token), std::move(right_expression));
 }
 
-std::unique_ptr<Expression> Parser::parseBoolean() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseIfExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseGroupedExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
-    return nullptr;
-}
-
 // infix
 std::unique_ptr<Expression>
 Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
 
-    // 1. 1 [ + ] 2 * 3
-    std::unique_ptr<Token> infix_token = std::move(curtoken_);
 
-    // [ + ]
+    // [ + ] BP
     int left_operator_RBP = getLeftOperatorRBP();
+
+    // 1. 1 [ + ] 2 * 3
+    std::unique_ptr<Token> op_token = std::move(curtoken_);
 
     //  + → [ 2 ]
     advanceCurToken();
@@ -94,7 +79,23 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
      * (1 + ( 2 * 3 ))
      */
     return InfixExpression::createUniqueOf(
-        std::move(infix_token), std::move(left_expression), std::move(right_expression));
+        std::move(op_token), std::move(left_expression), std::move(right_expression));
+}
+
+std::unique_ptr<Expression> Parser::parseBoolean() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseIfExpression() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseGroupedExpression() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
+    return nullptr;
 }
 
 void Parser::registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr) {
@@ -271,12 +272,15 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
      *  [ 1 ] + 2
      *  [ 1 ]
      */
-    std::unique_ptr<Token> expression_token = std::move(curtoken_);
+    // std::unique_ptr<Token> prefix_token = std::move(curtoken_);
     std::unique_ptr<Expression> expression =
         parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
 
+    // std::unique_ptr<ExpressionStatement> expression_statement =
+    //     ExpressionStatement::createUniqueOf(std::move(prefix_token), std::move(expression));
+
     std::unique_ptr<ExpressionStatement> expression_statement =
-        ExpressionStatement::createUniqueOf(std::move(expression_token), std::move(expression));
+        ExpressionStatement::createUniqueFrom(std::move(expression));
 
     if (isPeekTokenType(TokenTypes::SEMICOLON)) {
         advanceCurToken();
@@ -348,8 +352,8 @@ std::unique_ptr<Expression> Parser::parseExpressionWithLeftOperatorRBP(int left_
     PrefixFuncPtr prefix_func_ptr = prefix_it->second; // map에서 함수 포인터 가져옴
 
     // 2. [ 2 ]
-    std::unique_ptr<Expression> left_expression =
-        (this->*prefix_func_ptr)(); // 클래스 함수 포인터 → 함수 호출
+    // 클래스 함수 포인터 → 함수 호출
+    std::unique_ptr<Expression> left_expression = (this->*prefix_func_ptr)();
 
     // 3. infix : 1 + [ 2 ] * 3
     while (!isPeekTokenType(TokenTypes::SEMICOLON) && left_operator_RBP < getRightOperatorLBP()) {

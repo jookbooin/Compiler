@@ -41,8 +41,8 @@ namespace parserTest
 
 public:
 
-	// expectedValue 값 검증용
-	bool checkExpressionValue(const Expression* expression, const std::variant<int, std::string>& value) {
+	// expected_value 값 검증용
+	bool TestExpectedValue(const Expression* expression, const std::variant<int, std::string>& value) {
 		switch (value.index()) {
 			case 0: { // int
 				const IntegerLiteral* temp = dynamic_cast<const IntegerLiteral*>(expression);
@@ -73,24 +73,12 @@ public:
 		return true;
 	}
 
-	bool testLetValue(LetStatement* stmt, std::variant<int, std::string>& value) {
-
-		const Expression* expression = stmt->getValue();
-		return checkExpressionValue(expression, value);
-	}
-
-	bool testReturnValue(ReturnStatement * stmt, std::variant<int, std::string> &value) {
-        const Expression* expression = stmt->getValue();
-		return checkExpressionValue(expression, value);
-	}
-
-
 	TEST_METHOD(test_Let) {
 
 		struct Test {
 			std::string input;
-			std::string expectedIdentifier;
-			std::variant<int, std::string> expectedValue;
+			std::string expected_identifier;
+			std::variant<int, std::string> expected_value;
 		};
 
 		std::vector<Test> tests = { {"let x = 5;", "x",5},
@@ -113,12 +101,18 @@ public:
 
 			LetStatement* temp = dynamic_cast<LetStatement*>(stmt);
 
-			if (!testLetVaiableName(temp, tests[i].expectedIdentifier)) {
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			if (!testLetVaiableName(temp, tests[i].expected_identifier)) {
 				Assert::Fail(L"testLetStatement failed");
 			}
 
 
-			if (!testLetValue(temp, tests[i].expectedValue)) {
+			const Expression* expression = temp->getValue();
+
+			if (!TestExpectedValue(expression, tests[i].expected_value)) {
                 Assert::Fail(L"testLetStatement failed");
 			}
 			
@@ -126,14 +120,10 @@ public:
 	}
 
 	TEST_METHOD(test_Return) {
-		std::string input = R"(
-			return 5;
-			return 10;
-			return 838383;)";
 
 		struct Test {
 			std::string input;
-			std::variant<int, std::string> expectedValue;
+			std::variant<int, std::string> expected_value;
 		};
 
 		std::vector<Test> tests = { {"return 5;", 5},
@@ -153,8 +143,14 @@ public:
             }
 
 			ReturnStatement* temp = dynamic_cast<ReturnStatement*>(stmt);
+
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
             
-			if (!testReturnValue(temp, tests[i].expectedValue)) {
+			const Expression* expression = temp->getValue();
+
+			if (!TestExpectedValue(expression, tests[i].expected_value)) {
 				Assert::Fail(L"returnStatement failed");
 			}
 
@@ -188,139 +184,151 @@ public:
 		Assert::AreEqual(std::string("foobar"), ident->getTokenLiteral());
 	}
 
-	//TEST_METHOD(test_IntegerLiteral) {
-	//	std::string input = R"(5;)";
+	TEST_METHOD(test_IntegerLiteral) {
+		std::string input = R"(5;)";
 
-	//	Lexer* lx = Lexer::createFrom(input);
-	//	Parser* p = Parser::createFrom(*lx);
+		Lexer lx(input);
+		Parser p(std::move(lx));
 
-	//	Program* pg = p->parseProgram();
+		Program* pg = p.parseProgram();
+		Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
 
-	//	Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+		Statement* stmt = pg->getStatements()[0].get();
 
-	//	Statement* stmt = pg->getStatements().front();
-	//	ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
-	//	if (exprStmt == nullptr) {
-	//		Assert::Fail(L"해당 타입이 아닙니다.");
-	//	}
+		ExpressionStatement* temp = dynamic_cast<ExpressionStatement*>(stmt);
 
-	//	Expression* expr = exprStmt->getExpression();
-	//	IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(expr);
-	//	if (intl == nullptr) {
-	//		Assert::Fail(L"해당 타입이 아닙니다.");
-	//	}
+		if (temp == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
 
-	//	Assert::AreEqual(static_cast<size_t>(5), static_cast<size_t>(intl->getValue()));
+		Expression* expr = temp->getExpression();
 
-	//	Assert::AreEqual(std::string("5"), intl->getTokenLiteral());
-	//}
+		IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(expr);
 
-	//TEST_METHOD(test_PrefixExpression) {
+		if (intl == nullptr) {
+			Assert::Fail(L"해당 타입이 아닙니다.");
+		}
 
-	//	struct PrefixTest {
-	//		std::string input;
-	//		std::string op;
-	//		int value;
-	//	};
+		Assert::AreEqual(static_cast<size_t>(5), static_cast<size_t>(intl->getValue()));
 
-	//	const std::vector<PrefixTest> v = {
-	//		{"!5;","!",5},
-	//		{"-15;","-",15}
-	//	};
+		Assert::AreEqual(std::string("5"), intl->getTokenLiteral());
+	}
 
-	//	for (PrefixTest pft : v) {
+	TEST_METHOD(test_PrefixExpression) {
 
-	//		Lexer* lx = Lexer::createFrom(pft.input);
-	//		Parser* p = Parser::createFrom(*lx);
+		struct PrefixTest {
+			std::string input;
+			std::string expected_op;
+			std::variant<int, std::string> expected_value;
+		};
 
-	//		Program* pg = p->parseProgram();
+		std::vector<PrefixTest> tests = {
+			{"!5;", "!", 5},
+			{"-15;", "-", 15},
+			{"!foobar;", "!", "foobar"},
+			{"-foobar;", "-", "foobar"}
+		};
 
-	//		Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+		for (int i = 0; i < tests.size(); i++) {
+            
+			Lexer lx(tests[i].input);
+			Parser p(std::move(lx));
 
-	//		Statement* stmt = pg->getStatements().front();
-	//		ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
-	//		if (exprStmt == nullptr) {
-	//			Assert::Fail(L"해당 타입이 아닙니다.");
-	//		}
+			Program* pg = p.parseProgram();
+			Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
 
-	//		Expression* expr = exprStmt->getExpression();
-	//		PrefixExpression* pfe = dynamic_cast<PrefixExpression*>(expr);
-	//		if (pfe == nullptr) {
-	//			Assert::Fail(L"해당 타입이 아닙니다.");
-	//		}
+			Statement* stmt = pg->getStatements()[0].get();
+			ExpressionStatement* temp = dynamic_cast<ExpressionStatement*>(stmt);
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
 
-	//		if (pfe->getOperator() != pft.op) {
-	//			Assert::Fail(L"해당 연산자가 아닙니다.");
-	//		}
+			Expression* expr = temp->getExpression();
+			PrefixExpression* pexpr = dynamic_cast<PrefixExpression*>(expr);
+			if (pexpr == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
 
-	//		if (!testIntegerLiteral(pfe->getRightExpression(), pft.value)) {
-	//			Assert::Fail(L"테스트 실패.");
-	//		}
+			if (pexpr->getOperator() != tests[i].expected_op) {
+				Assert::Fail(L"해당 연산자가 아닙니다.");
+			}
 
-	//		delete lx;
-	//		delete p;
-	//		delete pg;
-	//	}
-	//}
+			const Expression* expression = pexpr->getRightExpression();
 
-	//TEST_METHOD(test_InfixExpression) {
-	//	struct InfixTest {
-	//		std::string input;
-	//		int left_value;
-	//		std::string op;
-	//		int right_value;
-	//	};
+			if (!TestExpectedValue(expression, tests[i].expected_value)) {
+				Assert::Fail(L".");
+			}
 
-	//	const std::vector<InfixTest> v = {
-	//		{"5 + 5;", 5, "+", 5},
-	//		{"5 - 5;", 5, "-", 5},
-	//		{"5 * 5;", 5, "*", 5},
-	//		{"5 / 5;", 5, "/", 5},
-	//		{"5 > 5;", 5, ">", 5},
-	//		{"5 < 5;", 5, "<", 5},
-	//		{"5 == 5;", 5, "==", 5},
-	//		{"5 != 5;", 5, "!=", 5},
-	//	};
+		}
+	}
 
-	//	for (InfixTest ift : v) {
+	TEST_METHOD(test_InfixExpression) {
 
-	//		Lexer* lx = Lexer::createFrom(ift.input);
-	//		Parser* p = Parser::createFrom(*lx);
+		struct InfixTest {
+			std::string input;
+			std::variant<int, std::string> expected_left_value;
+			std::string expected_op;
+			std::variant<int, std::string> expected_right_value;
+		};
 
-	//		Program* pg = p->parseProgram();
+		const std::vector<InfixTest> tests = {
+			{"5 + 5;", 5, "+", 5},
+			{"5 - 5;", 5, "-", 5},
+			{"5 * 5;", 5, "*", 5},
+			{"5 / 5;", 5, "/", 5},
+			{"5 > 5;", 5, ">", 5},
+			{"5 < 5;", 5, "<", 5},
+			{"5 == 5;", 5, "==", 5},
+			{"5 != 5;", 5, "!=", 5},
+			{"foobar + barfoo;", "foobar", "+", "barfoo"},
+			{"foobar - barfoo;", "foobar", "-", "barfoo"},
+			{"foobar * barfoo;", "foobar", "*", "barfoo"},
+			{"foobar / barfoo;", "foobar", "/", "barfoo"},
+			{"foobar > barfoo;", "foobar", ">", "barfoo"},
+			{"foobar < barfoo;", "foobar", "<", "barfoo"},
+			{"foobar == barfoo;", "foobar", "==", "barfoo"},
+			{"foobar != barfoo;", "foobar", "!=", "barfoo"}
+		};
 
-	//		Assert::AreEqual(static_cast<size_t>(8), pg->getStatements().size());
+		for (int i = 0; i < tests.size(); i++) {
+            
+			Lexer lx(tests[i].input);
+			Parser p(std::move(lx));
 
-	//		Statement* stmt = pg->getStatements().front();
-	//		ExpressionStatement* exprStmt = dynamic_cast<ExpressionStatement*>(stmt);
-	//		if (exprStmt == nullptr) {
-	//			Assert::Fail(L"해당 타입이 아닙니다.");
-	//		}
+ 			Program* pg = p.parseProgram();
+			Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
 
-	//		Expression* expr = exprStmt->getExpression();
-	//		InfixExpression* ife = dynamic_cast<InfixExpression*>(expr);
-	//		if (ife == nullptr) {
-	//			Assert::Fail(L"해당 타입이 아닙니다.");
-	//		}
+			Statement* stmt = pg->getStatements()[0].get();
+			ExpressionStatement* temp = dynamic_cast<ExpressionStatement*>(stmt);
 
-	//		if (!testIntegerLiteral(ife->getLeftExpression(), ift.left_value)) {
-	//			Assert::Fail(L"테스트 실패.");
-	//		}
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
 
-	//		if (ife->getOperator() != ift.op) {
-	//			Assert::Fail(L"해당 연산자가 아닙니다.");
-	//		}
+			Expression* expr = temp->getExpression();
+			InfixExpression* iexpr = dynamic_cast<InfixExpression*>(expr);
+			if (iexpr == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
 
-	//		if (!testIntegerLiteral(ife->getRightExpression(), ift.right_value)) {
-	//			Assert::Fail(L"테스트 실패.");
-	//		}
+			if (iexpr->getOperator() != tests[i].expected_op) {
+				Assert::Fail(L"해당 연산자가 아닙니다.");
+			}
 
-	//		delete lx;
-	//		delete p;
-	//		delete pg;
-	//	}
+			const Expression* left_expr = iexpr->getLeftExpression();
+			const Expression* right_expr = iexpr->getRightExpression();
 
-	//}
+			if (!TestExpectedValue(left_expr, tests[i].expected_left_value)) {
+				Assert::Fail(L"테스트 실패.");
+			}
+
+			if (!TestExpectedValue(right_expr, tests[i].expected_right_value)) {
+				Assert::Fail(L"테스트 실패.");
+			}
+
+		}
+
+	}
 
 
 	//TEST_METHOD(test_Parser) {
