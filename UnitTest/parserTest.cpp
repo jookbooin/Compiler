@@ -331,61 +331,42 @@ public:
 	}
 
 
-	//TEST_METHOD(test_Parser) {
-	//	struct ParserTest {
-	//		std::string input;
-	//		std::string expected;
-	//	};
+	TEST_METHOD(test_Parser) {
+		struct ParserTest {
+			std::string input;
+			std::string expected;
+		};
 
-	//	const std::vector<ParserTest> v = {
-	//		{"-a * b", "((-a) * b)"},
-	//		{"!-a", "(!(-a))"},
-	//		{"a + b + c", "((a + b) + c)"},
-	//		{"a + b - c", "((a + b) - c)"},
-	//		{"a * b * c", "((a * b) * c)"},
-	//		{"a * b / c", "((a * b) / c)"},
-	//		{"a + b / c", "(a + (b / c))"},
-	//		{"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
-	//		{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
-	//		{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
-	//		{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
-	//		{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"}
-	//	};
+		const std::vector<ParserTest> tests = {
+			{"-a * b", "((-a) * b)"},
+			{"!-a", "(!(-a))"},
+			{"a + b + c", "((a + b) + c)"},
+			{"a + b - c", "((a + b) - c)"},
+			{"a * b * c", "((a * b) * c)"},
+			{"a * b / c", "((a * b) / c)"},
+			{"a + b / c", "(a + (b / c))"},
+			{"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+			{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
+			{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
+			{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+			{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"}
+		};
 
-	//	for (ParserTest pt : v) {
-	//		Lexer* lx = Lexer::createFrom(pt.input);
-	//		Parser* p = Parser::createFrom(*lx);
+		for (int i = 0; i < tests.size(); i++) {
+			Lexer lx(tests[i].input);
+			Parser p(std::move(lx));
 
-	//		Program* pg = p->parseProgram();
+			Program* pg = p.parseProgram();
 
-	//		if (!checkParserErrors(p)) {
-	//			Assert::Fail(L"테스트 실패.");
-	//		}
+			if (!checkParserErrors(p)) {
+				Assert::Fail(L"테스트 실패.");
+			}
 
-	//		delete lx;
-	//		delete p;
-	//	}
-	//}
-
-	bool testIntegerLiteral(Expression* expression, int value) {
-		IntegerLiteral* intl = dynamic_cast<IntegerLiteral*>(expression);
-		if (intl == nullptr) {
-			return false;
 		}
-
-		if (intl->getValue() != value) {
-			return false;
-		}
-
-		if (intl->getTokenLiteral() != std::to_string(value)) {
-			return false;
-		}
-
-		return true;
 	}
 
-	bool checkParserErrors(const Parser* p) {
-		if (p->getErrors().size() == 0) {
+	bool checkParserErrors(Parser& p) {
+		if (p.getErrors().size() == 0) {
 			return true;
 		}
 
