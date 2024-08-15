@@ -410,7 +410,13 @@ public:
 			{"true", "true"},
 			{"false", "false"},
 			{"3 > 5 == false", "((3 > 5) == false)"},
-			{"3 < 5 == true", "((3 < 5) == true)"}
+			{"3 < 5 == true", "((3 < 5) == true)"},
+			{"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
+			{"(5 + 5) * 2", "((5 + 5) * 2)"},
+			{"2 / (5 + 5)", "(2 / (5 + 5))"},
+			{"(5 + 5) * 2 - (5 + 5)", "(((5 + 5) * 2) - (5 + 5))"},
+			{"-(5 + 5)", "(-(5 + 5))"},
+			{"!(true == true)", "(!(true == true))"}
 		};
 
 		for (int i = 0; i < tests.size(); i++) {
@@ -422,6 +428,18 @@ public:
 			if (!checkParserErrors(p)) {
 				Assert::Fail(L"테스트 실패.");
 			}
+
+			Assert::AreEqual(static_cast<size_t>(1), pg->getStatements().size());
+
+			Statement* stmt = pg->getStatements()[0].get();
+
+			ExpressionStatement* temp = dynamic_cast<ExpressionStatement*>(stmt);
+
+			if (temp == nullptr) {
+				Assert::Fail(L"해당 타입이 아닙니다.");
+			}
+
+			Expression* expr = temp->getExpression();
 
 		}
 	}
