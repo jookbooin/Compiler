@@ -18,12 +18,11 @@ Parser::Parser(Lexer &&lx) : lexer_(std::move(lx)), curtoken_(nullptr), peektoke
     advanceCurToken();
 }
 
-// prefix
-std::unique_ptr<Expression> Parser::parseIdentifier() { // TokenTypes::IDENT
+std::unique_ptr<Expression> Parser::parseIdentifier() {
     return Identifier::createUniqueFrom(std::move(curtoken_));
 }
 
-std::unique_ptr<Expression> Parser::parseIntegerLiteral() { // TokenTypes::INT
+std::unique_ptr<Expression> Parser::parseIntegerLiteral() {
     try {
         return IntegerLiteral::createUniqueFrom(std::move(curtoken_));
     } catch (const ParsingException &e) { // string -> int 변환 불가 메서드
@@ -53,6 +52,36 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression() {
     return PrefixExpression::createUniqueOf(std::move(prefix_token), std::move(right_expression));
 }
 
+std::unique_ptr<Expression> Parser::parseBoolean() {
+    bool flag = isCurTokenType(TokenTypes::TRUE);
+    return Boolean::createUniqueOf(std::move(curtoken_), flag);
+}
+
+std::unique_ptr<Expression> Parser::parseGroupedExpression() {
+
+    // [ ( ]  5 + 5 )
+    advanceCurToken();
+
+    // ( [ 5 ] + 5 )
+    std::unique_ptr<Expression> inner_expression =
+        parseExpressionWithLeftOperatorRBP(Operator::LOWEST);
+
+    // ( )
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::RPAREN)) {
+        throw ParsingException(peekError(TokenTypes::RPAREN));
+    }
+
+    return inner_expression;
+}
+
+std::unique_ptr<Expression> Parser::parseIfExpression() {
+    return nullptr;
+}
+
+std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
+    return nullptr;
+}
+
 // infix
 std::unique_ptr<Expression>
 Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
@@ -67,8 +96,9 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
     advanceCurToken();
 
     // 2. 1 + [ 2 ] * 3
-    std::unique_ptr<Expression> right_expression = parseExpressionWithLeftOperatorRBP(
-        left_operator_RBP); // +(rbp), *(lbp) 비교후 expression 비교
+    // +(rbp), *(lbp) 비교후 expression 비교
+    std::unique_ptr<Expression> right_expression =
+        parseExpressionWithLeftOperatorRBP(left_operator_RBP);
 
     /*
      * left : 1
@@ -79,23 +109,6 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
      */
     return InfixExpression::createUniqueOf(
         std::move(op_token), std::move(left_expression), std::move(right_expression));
-}
-
-std::unique_ptr<Expression> Parser::parseBoolean() {
-    bool flag = isCurTokenType(TokenTypes::TRUE);
-    return Boolean::createUniqueOf(std::move(curtoken_),flag);
-}
-
-std::unique_ptr<Expression> Parser::parseIfExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseGroupedExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
-    return nullptr;
 }
 
 void Parser::registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr) {
@@ -174,6 +187,9 @@ bool Parser::isPeekTokenType(const TokenType &type) {
     return peektoken_->getType() == type;
 }
 
+/*
+    peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
+*/
 bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType &type) {
     if (isPeekTokenType(type)) {
         advanceCurToken();
@@ -302,10 +318,6 @@ std::unique_ptr<Statement> Parser::parseStatementFromCurToken() {
     return nullptr;
 }
 
-/*
-* program DI
-  - root 1개만 있어야 하므로 참조로 전달?
-*/
 Program *Parser::parseProgram() {
 
     // 1. AST root 노드 생성
@@ -335,11 +347,11 @@ Program *Parser::parseProgram() {
     return root;
 }
 
-/// <summary>
-/// 재귀적으로 동작 /
-/// 매개변수는 왼쪽 연산자의 right_binding_power을 의미 /
-/// [ + (5) * ] : 5가 + , * 의 우선순위를 통해 어느것을 먼저 처리할지 결정/
-/// </summary>
+/**
+    1. 재귀적으로 동작
+    2. left_operator_RBP 전달
+    3. ( + [ 5 ] * ) : '5'가 '+'의 RBP 와 '*'의 LBP 비교
+*/
 std::unique_ptr<Expression> Parser::parseExpressionWithLeftOperatorRBP(int left_operator_RBP) {
 
     // 1. prefix :1 + [ 2 ] * 3
@@ -374,9 +386,4 @@ std::unique_ptr<Expression> Parser::parseExpressionWithLeftOperatorRBP(int left_
     }
 
     return left_expression;
-}
-
-Parser *Parser::createFrom(const std::string &input) {
-    Parser *p = new Parser(input);
-    return p;
 }
