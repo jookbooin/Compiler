@@ -8,6 +8,7 @@
 #include "../ast/infixExpression/infixExpression.h"
 #include "../ast/integerLiteral/integer_literal.h"
 #include "../ast/prefixExpression/prefixExpression.h"
+#include "../ast/ifExpresion/ifExpression.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
 #include "parse_info.h"
@@ -71,6 +72,8 @@ class Parser { // 1개 생성
     std::unique_ptr<Expression> parseExpressionWithLeftOperatorRBP(int left_token_RBP);
 
     Program *parseProgram();
+    std::unique_ptr<BlockStatement> parseBlockStatement();
+
     void addError(const std::string &error_info);
     const std::string &peekError(const TokenType &type);
     void advanceCurToken();

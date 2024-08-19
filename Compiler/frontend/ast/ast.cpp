@@ -15,8 +15,8 @@ std::string Program::getTokenLiteral() const {
     return "Program empty!";
 }
 
-void Program::addStatement(std::unique_ptr<Statement> stm) {
-    statements_.push_back(std::move(stm));
+void Program::addStatement(std::unique_ptr<Statement> stmt) {
+    statements_.push_back(std::move(stmt));
 }
 
 Program *Program::create() {
@@ -142,7 +142,7 @@ std::string ExpressionStatement::getTokenLiteral() const {
 void ExpressionStatement::statementNode() const {
 }
 
-Expression *ExpressionStatement::getExpression() const {
+const Expression *ExpressionStatement::getExpression() const {
     return expression_.get();
 }
 
@@ -156,4 +156,55 @@ Expression *ExpressionStatement::getExpression() const {
 std::unique_ptr<ExpressionStatement>
 ExpressionStatement::createUniqueFrom(std::unique_ptr<Expression> expression) {
     return std::make_unique<ExpressionStatement>(std::move(expression));
+}
+
+BlockStatement::BlockStatement(std::unique_ptr<Token> token)
+    : block_init_token_(std::move(token)), block_end_token_(nullptr) {
+    logPrint("BlockStatement 생성자");
+}
+
+BlockStatement::~BlockStatement() {
+    logPrint("BlockStatement 소멸자");
+}
+
+BlockStatement::BlockStatement(BlockStatement &&src) noexcept
+    : block_init_token_(std::move(src.block_init_token_)),
+      statements_(std::move(src.statements_)),
+      block_end_token_(std::move(src.block_end_token_)) {
+    logPrint("BlockStatement 이동 생성자");
+}
+
+BlockStatement &BlockStatement::operator=(BlockStatement &&src) noexcept {
+    if (this != &src) {
+        block_init_token_ = std::move(src.block_init_token_);
+        statements_ = std::move(src.statements_);
+        block_end_token_ = std::move(src.block_end_token_);
+        logPrint("BlockStatement 이동 대입 연산자");
+    }
+    return *this;
+}
+
+std::string BlockStatement::getTokenLiteral() const {
+    std::string end_token_literal = block_end_token_ ? block_end_token_->getLiteral() : "";
+    return block_init_token_->getLiteral() + " " + end_token_literal; // { }
+}
+
+
+void BlockStatement::statementNode() const {
+}
+
+void BlockStatement::addStatement(std::unique_ptr<Statement> stmt) {
+    statements_.push_back(std::move(stmt));
+}
+
+void BlockStatement::setBlockEndToken(std::unique_ptr<Token> rbrace_token) {
+    block_end_token_ = std::move(rbrace_token);
+}
+
+const std::vector<std::unique_ptr<Statement>>& BlockStatement::getStatements() const {
+    return statements_;
+}
+
+std::unique_ptr<BlockStatement> BlockStatement::createFrom(std::unique_ptr<Token> block_init_token) {
+    return std::make_unique<BlockStatement>(std::move(block_init_token));
 }

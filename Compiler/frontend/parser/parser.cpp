@@ -75,7 +75,55 @@ std::unique_ptr<Expression> Parser::parseGroupedExpression() {
 }
 
 std::unique_ptr<Expression> Parser::parseIfExpression() {
-    return nullptr;
+
+    // 1. [ if ]
+    std::unique_ptr<Token> if_token = std::move(curtoken_);
+
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LPAREN)) {
+        throw ParsingException(peekError(TokenTypes::LPAREN));
+    }
+
+    // ( → condition
+    advanceCurToken();
+
+    // if ( [ condition ] )
+    std::unique_ptr<Expression> condition =
+        parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
+
+    // condition → )
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::RPAREN)) {
+        throw ParsingException(peekError(TokenTypes::RPAREN));
+    }
+
+    // ) → {
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LBRACE)) {
+        throw ParsingException(peekError(TokenTypes::LBRACE));
+    }
+
+    // [ { ] statement }
+    std::unique_ptr<BlockStatement> consequence = parseBlockStatement();
+
+    // if 생성  ( condition 과 consequence 로 )
+
+    std::unique_ptr<IfExpression> if_expression =
+        IfExpression::createOf(std::move(if_token), std::move(condition), std::move(consequence));
+
+    // } else {
+    if (isPeekTokenType(TokenTypes::ELSE)) {
+
+        // [ else ] {
+        advanceCurToken();
+
+        if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LBRACE)) {
+            throw ParsingException(peekError(TokenTypes::LBRACE));
+        }
+
+        // alternative 존재한다면 추가
+        std::unique_ptr<BlockStatement> alternative = parseBlockStatement();
+        if_expression->setAlternative(std::move(alternative));
+    }
+
+    return if_expression;
 }
 
 std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
@@ -155,7 +203,7 @@ void Parser::addError(const std::string &error_info) {
 
 const std::string &Parser::peekError(const TokenType &type) {
     std::ostringstream oss;
-    oss << "expect TokenType : " << peektoken_->getType() << ", actual : " << type;
+    oss << "expect TokenType : " << type << ", actual : " << peektoken_->getType();
 
     return oss.str();
 }
@@ -288,12 +336,8 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
      *  [ 1 ] + 2
      *  [ 1 ]
      */
-    // std::unique_ptr<Token> prefix_token = std::move(curtoken_);
     std::unique_ptr<Expression> expression =
         parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
-
-    // std::unique_ptr<ExpressionStatement> expression_statement =
-    //     ExpressionStatement::createUniqueOf(std::move(prefix_token), std::move(expression));
 
     std::unique_ptr<ExpressionStatement> expression_statement =
         ExpressionStatement::createUniqueFrom(std::move(expression));
@@ -314,8 +358,6 @@ std::unique_ptr<Statement> Parser::parseStatementFromCurToken() {
     } else {
         return parseExpressionStatement();
     }
-
-    return nullptr;
 }
 
 Program *Parser::parseProgram() {
@@ -345,6 +387,42 @@ Program *Parser::parseProgram() {
     }
 
     return root;
+}
+
+std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
+
+    // {
+    std::unique_ptr<Token> block_init_token = std::move(curtoken_);
+
+    std::unique_ptr<BlockStatement> block = BlockStatement::createFrom(std::move(block_init_token));
+
+    // { → expression
+    advanceCurToken();
+
+    while (!isCurTokenType(TokenTypes::RBRACE) && !isCurTokenType(TokenTypes::kEOF)) {
+
+        std::unique_ptr<Statement> stmt;
+
+        try {
+            stmt = parseStatementFromCurToken(); // error 발생 (
+
+            block->addStatement(std::move(stmt));
+        } catch (ParsingException e) {
+            addError(e.what());
+        }
+
+        advanceCurToken();
+    }
+
+    // }
+    if (!isCurTokenType(TokenTypes::RBRACE)) {
+        throw ParsingException(peekError(TokenTypes::RBRACE));
+    }
+
+    std::unique_ptr<Token> block_end_token = std::move(curtoken_);
+    block->setBlockEndToken(std::move(block_end_token));
+
+    return block;
 }
 
 /**
