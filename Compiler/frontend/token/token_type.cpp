@@ -1,15 +1,15 @@
 #include "token_type.h"
 
 namespace TokenTypes {
-std::map<std::string, TokenType> keywords = {{"fn", FUNCTION},
-                                             {"let", LET},
+std::map<std::string, TokenType> keywords = {{"let", LET},
+                                             {"return", RETURN},
                                              {"true", TRUE},
                                              {"false", FALSE},
+                                             {"fn", FUNCTION},
                                              {"if", IF},
-                                             {"else", ELSE},
-                                             {"return", RETURN}};
+                                             {"else", ELSE}};
 
-TokenType lookupIdent(const std::string ident) {
+TokenType getTokenTypeFromKeywords(const std::string ident) {
     auto it = keywords.find(ident);
     if (it != keywords.end()) {
         return it->second;

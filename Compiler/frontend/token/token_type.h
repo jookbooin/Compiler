@@ -43,9 +43,12 @@ const TokenType IF = "IF";
 const TokenType ELSE = "ELSE";
 const TokenType RETURN = "RETURN";
 
+/*
+* let, return, true, false
+* fn, if, else
+*/
 extern std::map<std::string, TokenType> keywords;
 
-// keywords 검색
-TokenType lookupIdent(const std::string ident);
+TokenType getTokenTypeFromKeywords(const std::string ident);
 
 } // namespace TokenTypes

@@ -16,13 +16,14 @@ class Program : public Node { // 1개 생성
 
   public:
     std::string getTokenLiteral() const override;
-    void addStatement(std::unique_ptr<Statement> stm);
+    void addStatement(std::unique_ptr<Statement> stmt);
 
     Program();
     ~Program();
     Program(const Program &copy) = delete;
     Program &operator=(const Program &src) = delete;
 
+    // test
     const std::vector<std::unique_ptr<Statement>> &getStatements() const;
     static Program *create();
 };
@@ -83,8 +84,6 @@ class ExpressionStatement : public Statement {
     std::unique_ptr<Expression> expression_;
 
   public:
-    // ExpressionStatement(std::unique_ptr<Token> expression_token,
-    //                     std::unique_ptr<Expression> expression);
     ExpressionStatement(std::unique_ptr<Expression> expression);
     ~ExpressionStatement();
     ExpressionStatement(const ExpressionStatement &copy) = delete;
@@ -95,10 +94,34 @@ class ExpressionStatement : public Statement {
     std::string getTokenLiteral() const override;
     void statementNode() const override;
 
-    Expression *getExpression() const;
+    // test
+    const Expression *getExpression() const;
 
-    // static std::unique_ptr<ExpressionStatement>
-    // createUniqueOf(std::unique_ptr<Token> return_token, std::unique_ptr<Expression> expression);
     static std::unique_ptr<ExpressionStatement>
     createUniqueFrom(std::unique_ptr<Expression> expression);
+};
+
+class BlockStatement : public Statement {
+  private:
+    std::unique_ptr<Token> block_init_token_; // {
+    std::vector<std::unique_ptr<Statement>> statements_;
+    std::unique_ptr<Token> block_end_token_; // }
+
+  public:
+    BlockStatement(std::unique_ptr<Token> token);
+    ~BlockStatement();
+    BlockStatement(const BlockStatement &copy) = delete;
+    BlockStatement &operator=(const BlockStatement &src) = delete;
+    BlockStatement(BlockStatement &&src) noexcept;
+    BlockStatement &operator=(BlockStatement &&src) noexcept;
+
+    std::string getTokenLiteral() const override;
+    void statementNode() const override;
+    void addStatement(std::unique_ptr<Statement> stmt);
+    void setBlockEndToken(std::unique_ptr<Token> rbrace_token);
+
+    // test
+    const std::vector<std::unique_ptr<Statement>> &getStatements() const;
+
+    static std::unique_ptr<BlockStatement> createFrom(std::unique_ptr<Token> block_init_token);
 };

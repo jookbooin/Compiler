@@ -5,13 +5,13 @@
 namespace Operator {
 
 enum Precedence {
-    LOWEST = 1,
-    EQUALS,      // ==
+    LOWEST = 1,  // )
+    EQUALS,      // == or !=
     LESSGREATER, // > or <
-    SUM,         // +
-    PRODUCT,     // *
+    SUM,         // + or -
+    PRODUCT,     // * or /
     PREFIX,      // -X or !X
-    CALL         // myFunction(X)
+    CALL         // ( 
 };
 
 extern std::map<TokenType, Precedence> priority_map;

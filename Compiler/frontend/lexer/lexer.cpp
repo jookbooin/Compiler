@@ -1,11 +1,11 @@
 #include "lexer.h"
 
 // front
-std::unique_ptr<Token> newToken(const TokenType &tokenType, const char &ch) {
+std::unique_ptr<Token> createUniqueTokenOf(const TokenType &tokenType, const char &ch) {
     return std::make_unique<Token>(tokenType, std::string(1, ch));
 }
 
-std::unique_ptr<Token> newToken(const TokenType &tokenType, const std::string &str) {
+std::unique_ptr<Token> createUniqueTokenOf(const TokenType &tokenType, const std::string &str) {
     return std::make_unique<Token>(tokenType, str);
 }
 
@@ -121,75 +121,76 @@ std::unique_ptr<Token> Lexer::nextToken() {
             char ch = ch_;
             readChar();
             std::string literal = std::string(1, ch) + std::string(1, ch_);
-            tok = newToken(TokenTypes::EQ, literal);
+            tok = createUniqueTokenOf(TokenTypes::EQ, literal);
         } else {
-            tok = newToken(TokenTypes::ASSIGN, ch_);
+            tok = createUniqueTokenOf(TokenTypes::ASSIGN, ch_);
         }
         break;
     case '+':
-        tok = newToken(TokenTypes::PLUS, ch_);
+        tok = createUniqueTokenOf(TokenTypes::PLUS, ch_);
         break;
     case '-':
-        tok = newToken(TokenTypes::MINUS, ch_);
+        tok = createUniqueTokenOf(TokenTypes::MINUS, ch_);
         break;
     case '!':
         if (peekChar() == '=') {
             char ch = ch_;
             readChar();
             std::string literal = std::string(1, ch) + std::string(1, ch_);
-            tok = newToken(TokenTypes::NOT_EQ, literal);
+            tok = createUniqueTokenOf(TokenTypes::NOT_EQ, literal);
         } else {
-            tok = newToken(TokenTypes::BANG, ch_);
+            tok = createUniqueTokenOf(TokenTypes::BANG, ch_);
         }
         break;
     case '/':
-        tok = newToken(TokenTypes::SLASH, ch_);
+        tok = createUniqueTokenOf(TokenTypes::SLASH, ch_);
         break;
     case '*':
-        tok = newToken(TokenTypes::ASTERISK, ch_);
+        tok = createUniqueTokenOf(TokenTypes::ASTERISK, ch_);
         break;
     case '<':
-        tok = newToken(TokenTypes::LT, ch_);
+        tok = createUniqueTokenOf(TokenTypes::LT, ch_);
         break;
     case '>':
-        tok = newToken(TokenTypes::GT, ch_);
+        tok = createUniqueTokenOf(TokenTypes::GT, ch_);
         break;
     case ';':
-        tok = newToken(TokenTypes::SEMICOLON, ch_);
+        tok = createUniqueTokenOf(TokenTypes::SEMICOLON, ch_);
         break;
     case ',':
-        tok = newToken(TokenTypes::COMMA, ch_);
+        tok = createUniqueTokenOf(TokenTypes::COMMA, ch_);
         break;
     case '{':
-        tok = newToken(TokenTypes::LBRACE, ch_);
+        tok = createUniqueTokenOf(TokenTypes::LBRACE, ch_);
         break;
     case '}':
-        tok = newToken(TokenTypes::RBRACE, ch_);
+        tok = createUniqueTokenOf(TokenTypes::RBRACE, ch_);
         break;
     case '(':
-        tok = newToken(TokenTypes::LPAREN, ch_);
+        tok = createUniqueTokenOf(TokenTypes::LPAREN, ch_);
         break;
     case ')':
-        tok = newToken(TokenTypes::RPAREN, ch_);
+        tok = createUniqueTokenOf(TokenTypes::RPAREN, ch_);
         break;
     case 0:
-        tok = newToken(TokenTypes::kEOF, "");
+        tok = createUniqueTokenOf(TokenTypes::kEOF, "");
         break;
     default:
         if (isLetter(ch_)) {
             std::string literal = readIdentifier();
-            TokenType type = TokenTypes::lookupIdent(literal);
+            TokenType type = TokenTypes::getTokenTypeFromKeywords(
+                literal); // let, func, boolean, if, else, Ident
 
-            tok = newToken(type, literal);
+            tok = createUniqueTokenOf(type, literal);
             return tok;
         } else if (isDigit(ch_)) {
             std::string literal = readNumber();
             TokenType type = TokenTypes::INT;
 
-            tok = newToken(type, literal);
+            tok = createUniqueTokenOf(type, literal);
             return tok;
         } else {
-            tok = newToken(TokenTypes::ILLEGAL, ch_);
+            tok = createUniqueTokenOf(TokenTypes::ILLEGAL, ch_);
         }
     }
 

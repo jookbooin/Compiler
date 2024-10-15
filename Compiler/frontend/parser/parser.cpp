@@ -18,12 +18,11 @@ Parser::Parser(Lexer &&lx) : lexer_(std::move(lx)), curtoken_(nullptr), peektoke
     advanceCurToken();
 }
 
-// prefix
-std::unique_ptr<Expression> Parser::parseIdentifier() { // TokenTypes::IDENT
+std::unique_ptr<Expression> Parser::parseIdentifier() {
     return Identifier::createUniqueFrom(std::move(curtoken_));
 }
 
-std::unique_ptr<Expression> Parser::parseIntegerLiteral() { // TokenTypes::INT
+std::unique_ptr<Expression> Parser::parseIntegerLiteral() {
     try {
         return IntegerLiteral::createUniqueFrom(std::move(curtoken_));
     } catch (const ParsingException &e) { // string -> int 변환 불가 메서드
@@ -53,6 +52,84 @@ std::unique_ptr<Expression> Parser::parsePrefixExpression() {
     return PrefixExpression::createUniqueOf(std::move(prefix_token), std::move(right_expression));
 }
 
+std::unique_ptr<Expression> Parser::parseBoolean() {
+    bool flag = isCurTokenType(TokenTypes::TRUE);
+    return Boolean::createUniqueOf(std::move(curtoken_), flag);
+}
+
+std::unique_ptr<Expression> Parser::parseGroupedExpression() {
+
+    // [ ( ]  5 + 5 )
+    advanceCurToken();
+
+    // ( [ 5 ] + 5 )
+    std::unique_ptr<Expression> inner_expression =
+        parseExpressionWithLeftOperatorRBP(Operator::LOWEST);
+
+    // ( )
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::RPAREN)) {
+        throw ParsingException(peekError(TokenTypes::RPAREN));
+    }
+
+    return inner_expression;
+}
+
+std::unique_ptr<Expression> Parser::parseIfExpression() {
+
+    // 1. [ if ]
+    std::unique_ptr<Token> if_token = std::move(curtoken_);
+
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LPAREN)) {
+        throw ParsingException(peekError(TokenTypes::LPAREN));
+    }
+
+    // ( → condition
+    advanceCurToken();
+
+    // if ( [ condition ] )
+    std::unique_ptr<Expression> condition =
+        parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
+
+    // condition → )
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::RPAREN)) {
+        throw ParsingException(peekError(TokenTypes::RPAREN));
+    }
+
+    // ) → {
+    if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LBRACE)) {
+        throw ParsingException(peekError(TokenTypes::LBRACE));
+    }
+
+    // [ { ] statement }
+    std::unique_ptr<BlockStatement> consequence = parseBlockStatement();
+
+    // if 생성  ( condition 과 consequence 로 )
+
+    std::unique_ptr<IfExpression> if_expression =
+        IfExpression::createOf(std::move(if_token), std::move(condition), std::move(consequence));
+
+    // } else {
+    if (isPeekTokenType(TokenTypes::ELSE)) {
+
+        // [ else ] {
+        advanceCurToken();
+
+        if (!advanceTokenIfPeekTokenTypeIs(TokenTypes::LBRACE)) {
+            throw ParsingException(peekError(TokenTypes::LBRACE));
+        }
+
+        // alternative 존재한다면 추가
+        std::unique_ptr<BlockStatement> alternative = parseBlockStatement();
+        if_expression->setAlternative(std::move(alternative));
+    }
+
+    return if_expression;
+}
+
+std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
+    return nullptr;
+}
+
 // infix
 std::unique_ptr<Expression>
 Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
@@ -67,8 +144,9 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
     advanceCurToken();
 
     // 2. 1 + [ 2 ] * 3
-    std::unique_ptr<Expression> right_expression = parseExpressionWithLeftOperatorRBP(
-        left_operator_RBP); // +(rbp), *(lbp) 비교후 expression 비교
+    // +(rbp), *(lbp) 비교후 expression 비교
+    std::unique_ptr<Expression> right_expression =
+        parseExpressionWithLeftOperatorRBP(left_operator_RBP);
 
     /*
      * left : 1
@@ -79,22 +157,6 @@ Parser::parseInfixExpression(std::unique_ptr<Expression> left_expression) {
      */
     return InfixExpression::createUniqueOf(
         std::move(op_token), std::move(left_expression), std::move(right_expression));
-}
-
-std::unique_ptr<Expression> Parser::parseBoolean() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseIfExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseGroupedExpression() {
-    return nullptr;
-}
-
-std::unique_ptr<Expression> Parser::parseFunctionLiteral() {
-    return nullptr;
 }
 
 void Parser::registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr) {
@@ -141,7 +203,7 @@ void Parser::addError(const std::string &error_info) {
 
 const std::string &Parser::peekError(const TokenType &type) {
     std::ostringstream oss;
-    oss << "expect TokenType : " << peektoken_->getType() << ", actual : " << type;
+    oss << "expect TokenType : " << type << ", actual : " << peektoken_->getType();
 
     return oss.str();
 }
@@ -173,6 +235,9 @@ bool Parser::isPeekTokenType(const TokenType &type) {
     return peektoken_->getType() == type;
 }
 
+/*
+    peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
+*/
 bool Parser::advanceTokenIfPeekTokenTypeIs(const TokenType &type) {
     if (isPeekTokenType(type)) {
         advanceCurToken();
@@ -271,12 +336,8 @@ std::unique_ptr<ExpressionStatement> Parser::parseExpressionStatement() {
      *  [ 1 ] + 2
      *  [ 1 ]
      */
-    // std::unique_ptr<Token> prefix_token = std::move(curtoken_);
     std::unique_ptr<Expression> expression =
         parseExpressionWithLeftOperatorRBP(Operator::Precedence::LOWEST);
-
-    // std::unique_ptr<ExpressionStatement> expression_statement =
-    //     ExpressionStatement::createUniqueOf(std::move(prefix_token), std::move(expression));
 
     std::unique_ptr<ExpressionStatement> expression_statement =
         ExpressionStatement::createUniqueFrom(std::move(expression));
@@ -297,14 +358,8 @@ std::unique_ptr<Statement> Parser::parseStatementFromCurToken() {
     } else {
         return parseExpressionStatement();
     }
-
-    return nullptr;
 }
 
-/*
-* program DI
-  - root 1개만 있어야 하므로 참조로 전달?
-*/
 Program *Parser::parseProgram() {
 
     // 1. AST root 노드 생성
@@ -334,11 +389,47 @@ Program *Parser::parseProgram() {
     return root;
 }
 
-/// <summary>
-/// 재귀적으로 동작 /
-/// 매개변수는 왼쪽 연산자의 right_binding_power을 의미 /
-/// [ + (5) * ] : 5가 + , * 의 우선순위를 통해 어느것을 먼저 처리할지 결정/
-/// </summary>
+std::unique_ptr<BlockStatement> Parser::parseBlockStatement() {
+
+    // {
+    std::unique_ptr<Token> block_init_token = std::move(curtoken_);
+
+    std::unique_ptr<BlockStatement> block = BlockStatement::createFrom(std::move(block_init_token));
+
+    // { → expression
+    advanceCurToken();
+
+    while (!isCurTokenType(TokenTypes::RBRACE) && !isCurTokenType(TokenTypes::kEOF)) {
+
+        std::unique_ptr<Statement> stmt;
+
+        try {
+            stmt = parseStatementFromCurToken(); // error 발생 (
+
+            block->addStatement(std::move(stmt));
+        } catch (ParsingException e) {
+            addError(e.what());
+        }
+
+        advanceCurToken();
+    }
+
+    // }
+    if (!isCurTokenType(TokenTypes::RBRACE)) {
+        throw ParsingException(peekError(TokenTypes::RBRACE));
+    }
+
+    std::unique_ptr<Token> block_end_token = std::move(curtoken_);
+    block->setBlockEndToken(std::move(block_end_token));
+
+    return block;
+}
+
+/**
+    1. 재귀적으로 동작
+    2. left_operator_RBP 전달
+    3. ( + [ 5 ] * ) : '5'가 '+'의 RBP 와 '*'의 LBP 비교
+*/
 std::unique_ptr<Expression> Parser::parseExpressionWithLeftOperatorRBP(int left_operator_RBP) {
 
     // 1. prefix :1 + [ 2 ] * 3
@@ -373,9 +464,4 @@ std::unique_ptr<Expression> Parser::parseExpressionWithLeftOperatorRBP(int left_
     }
 
     return left_expression;
-}
-
-Parser *Parser::createFrom(const std::string &input) {
-    Parser *p = new Parser(input);
-    return p;
 }

@@ -4,9 +4,11 @@
 
 #include "../../globalUtils.h"
 #include "../ast/ast.h"
+#include "../ast/boolean/boolean.h"
 #include "../ast/infixExpression/infixExpression.h"
 #include "../ast/integerLiteral/integer_literal.h"
 #include "../ast/prefixExpression/prefixExpression.h"
+#include "../ast/ifExpresion/ifExpression.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
 #include "parse_info.h"
@@ -38,10 +40,14 @@ class Parser { // 1개 생성
     std::unique_ptr<ExpressionStatement> parseExpressionStatement();
     std::unique_ptr<Statement> parseStatementFromCurToken();
 
-    void registerPrefixFunc(TokenType tokenType,
-                            PrefixFuncPtr prefixFuncPtr); // prefix_func_map에 등록
-    void registerInfixFunc(TokenType tokenType, InfixFuncPtr infixFuncPtr); // infix_func_map에 등록
-    void initializeFuncMaps(); // prefix_func_map, infix_func_map 초기화
+    // prefix 파싱함수 등록
+    void registerPrefixFunc(TokenType tokenType, PrefixFuncPtr prefixFuncPtr);
+
+    // infix 파싱함수 등록 
+    void registerInfixFunc(TokenType tokenType, InfixFuncPtr infixFuncPtr);
+
+    // prefix_func_map, infix_func_map 초기화
+    void initializeFuncMaps(); 
 
   public:
     Parser(Lexer &&lx);
@@ -62,17 +68,18 @@ class Parser { // 1개 생성
     // infix 파싱 메서드
     std::unique_ptr<Expression> parseInfixExpression(std::unique_ptr<Expression> left_expression);
 
-    std::unique_ptr<Expression> parseExpressionWithLeftOperatorRBP(
-        int left_token_RBP); // 왼쪽 연산자(= 토큰)의 right_binding_power(= 연산자 우선순위) 전달
+    // binding power ( 연산자 우선순위 )로 expression 파싱
+    std::unique_ptr<Expression> parseExpressionWithLeftOperatorRBP(int left_token_RBP);
 
     Program *parseProgram();
+    std::unique_ptr<BlockStatement> parseBlockStatement();
+
     void addError(const std::string &error_info);
     const std::string &peekError(const TokenType &type);
     void advanceCurToken();
     bool isCurTokenType(const TokenType &type);
     bool isPeekTokenType(const TokenType &type);
-    bool advanceTokenIfPeekTokenTypeIs(
-        const TokenType &type); //  peekTokenType 확인 후, 올바른 타입이면 nextToken으로 이동
+    bool advanceTokenIfPeekTokenTypeIs(const TokenType &type);
 
     // getter
     int getCurTokenPrecedence();
@@ -81,6 +88,4 @@ class Parser { // 1개 생성
     int getRightOperatorLBP();
     const std::vector<std::string> &getErrors() const;
 
-    static Parser *createFrom(const Lexer &lexer);
-    static Parser *createFrom(const std::string &input);
 };
